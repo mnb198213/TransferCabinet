@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+    <com.jintoufs.zj.transfercabinet.widget.CustomToolBar
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/toolbar_height"
+        app:title="领件"/>
+<ImageView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:src="@drawable/ct_open"
+    android:layout_marginTop="30dp"
+    android:layout_gravity="center_horizontal"/>
+    <TextView
+        android:id="@+id/tv_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textColor="#454545"
+        android:padding="20dp"
+        android:gravity="center_horizontal"/>
+    <Button
+        android:id="@+id/btnFinish"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:text="完成"
+        android:background="@drawable/shape_blue_radius10"
+        android:textColor="@android:color/white"
+        android:textSize="20sp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="50dp"/>
+</LinearLayout>

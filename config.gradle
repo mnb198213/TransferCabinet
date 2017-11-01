@@ -1,0 +1,50 @@
+ext {
+
+    android = [
+            compileSdkVersion:25,
+            buildToolsVersion:'25.0.3',
+            targetSdkVersion:19,
+
+            //福州总行主程序版本
+            zonghang_minSdkVersion : 16,
+            zonghang_targetSdkVersion:22,
+            zonghang_versionCode : 1883,
+            zonghang_versionName : "1.88.3",
+
+            //福州兴业总行 （重构版本）
+            zonghang2_minSdkVersion : 16,
+            zonghang2_targetSdkVersion:22,
+            zonghang2_versionCode : 1900,
+            zonghang2_versionName : "1.9",
+
+            //厦门程序版本
+            xiamen_minSdkVersion : 16,
+            xiamen_versionCode : 1881,
+            xiamen_versionName : "1.88.1",
+
+            //北京程序版本
+            beijing_minSdkVersion : 16,
+            beijing_versionCode : 182,
+            beijing_versionName : "1.82",
+
+            //library版本用
+            lib_minSdkVersion : 16,
+            lib_versionCode : 1,
+            lib_versionName : "1.0.0"
+
+    ]
+    dependencies = [
+            "support-v4"        : 'com.android.support:support-v4:19.+',
+            "appcompat-v7"      : 'com.android.support:appcompat-v7:25.3.1',
+            "design"            : 'com.android.support:design:25.3.1',
+            "recyclerview-v7"   : 'com.android.support:recyclerview-v7:25.3.1',
+            "support-compat"    : 'com.android.support:support-compat:25.3.1',
+
+            "retrofit2"         :'com.squareup.retrofit2:retrofit:2.3.0',
+            "converter-gson"    :'com.squareup.retrofit2:converter-gson:2.3.0',
+            "okhttp3"           :'com.squareup.okhttp3:okhttp:3.8.1',
+            "okhttp-urlconnection":'com.squareup.okhttp3:okhttp-urlconnection:3.8.1'
+    ]
+
+
+}

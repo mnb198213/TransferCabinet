@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CustomToolBar">
+        <attr name="title" format="string" />
+        <attr name="tv_right" format="string" />
+        <attr name="tv_left" format="string" />
+        <attr name="iv_left" format="reference" />
+        <attr name="iv_right" format="reference" />
+        <attr name="isShowLeftImage" format="boolean" />
+        <attr name="isShowLeftText" format="boolean" />
+        <attr name="isShowRightImage" format="boolean" />
+        <attr name="isShowRightText" format="boolean" />
+        <attr name="distance_left" format="dimension" />
+        <attr name="distance_right" format="dimension" />
+    </declare-styleable>
+</resources>

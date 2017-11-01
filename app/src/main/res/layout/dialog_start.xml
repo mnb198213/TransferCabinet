@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center"
+        android:text="请选择操作"
+        android:textColor="#454545"
+        android:textSize="20sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_action1"
+                android:layout_width="@dimen/start_dialog_width"
+                android:layout_height="@dimen/start_dialog_height"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/shape_blue_radius50"
+                android:gravity="center"
+                android:text="投件"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/start_dialog_text_size" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_action2"
+                android:layout_width="@dimen/start_dialog_width"
+                android:layout_height="@dimen/start_dialog_height"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/shape_blue_radius50"
+                android:gravity="center"
+                android:text="取件"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/start_dialog_text_size" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_cancel"
+                android:layout_width="@dimen/start_dialog_width"
+                android:layout_height="@dimen/start_dialog_height"
+                android:background="@drawable/shape_blue_radius50"
+                android:gravity="center"
+                android:text="取消"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/start_dialog_text_size" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -18,10 +18,11 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 /**
+ * 库管员投件
  * Created by zj on 2017/9/6.
  */
 
-public class CastActivity extends SerialPortActivity {
+public class ManagerCastActivity extends SerialPortActivity {
 
 
     @Override

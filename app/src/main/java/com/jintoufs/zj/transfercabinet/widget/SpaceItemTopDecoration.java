@@ -8,10 +8,10 @@ import android.view.View;
  * Created by Administrator on 2017/8/11 0011.
  */
 
-public class SpaceItemDecoration extends RecyclerView.ItemDecoration {
+public class SpaceItemTopDecoration extends RecyclerView.ItemDecoration {
     private int space;
 
-    public SpaceItemDecoration(int space) {
+    public SpaceItemTopDecoration(int space) {
         this.space = space;
     }
 

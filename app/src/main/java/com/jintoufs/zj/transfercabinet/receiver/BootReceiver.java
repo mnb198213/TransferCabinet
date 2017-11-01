@@ -3,12 +3,6 @@ package com.jintoufs.zj.transfercabinet.receiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
-
-import com.basekit.util.ToastUtils;
-import com.jintoufs.zj.transfercabinet.activity.LoginActivity;
-import com.jintoufs.zj.transfercabinet.activity.StartConfirmActivity;
-import com.orhanobut.logger.Logger;
 
 /**
  * Created by zj on 2017/9/4.

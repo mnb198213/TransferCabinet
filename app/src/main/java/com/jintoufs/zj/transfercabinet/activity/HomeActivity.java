@@ -8,14 +8,14 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.jintoufs.zj.transfercabinet.R;
+import com.jintoufs.zj.transfercabinet.util.TimeUtil;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -30,6 +30,8 @@ public class HomeActivity extends AppCompatActivity {
     @BindView(R.id.tv_time)
     TextView tvTime;
 
+    private Unbinder unbinder;
+
     private Intent mIntent;
     private Context mContext;
 
@@ -37,35 +39,34 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        ButterKnife.bind(this);
+        unbinder = ButterKnife.bind(this);
         mContext = this;
-        tvTime.setText(getDateStr());
+        tvTime.setText(TimeUtil.DateToDayString(new Date()));
     }
 
     @OnClick({R.id.tv_take, R.id.tv_save, R.id.tv_manager})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.tv_take:
-                mIntent = new Intent(mContext, PickupActivity.class);
+                mIntent = new Intent(mContext, UserPickupActivity.class);
                 startActivity(mIntent);
                 break;
             case R.id.tv_save:
-                mIntent = new Intent(mContext, ReturnActivity.class);
+                mIntent = new Intent(mContext, UserReturnActivity.class);
                 startActivity(mIntent);
                 break;
             case R.id.tv_manager:
+                mIntent = new Intent(mContext, TCManageActivity.class);
+                startActivity(mIntent);
                 break;
         }
     }
 
-    private String getDateStr() {
-        Date date = new Date();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy.MM.dd");
-        String strDate = simpleDateFormat.format(date);
-        if (strDate != null) {
-            return strDate;
-        } else {
-            return "当前时间未获取";
+    @Override
+    protected void onDestroy() {
+        if (unbinder != null) {
+            unbinder.unbind();
         }
+        super.onDestroy();
     }
 }

@@ -23,15 +23,11 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".activity.StartConfirmActivity"></activity>
         <activity android:name=".activity.TestPortActivity"></activity>
-        <activity android:name=".activity.CastActivity"></activity>
-        <activity android:name=".activity.PickupActivity" />
-        <activity android:name=".activity.LoginActivity">
-        </activity>
-        <activity android:name=".activity.SelectActionActivity" />
-        <activity android:name=".activity.ReceiveActivity" />
-        <activity android:name=".activity.ReturnActivity" />
+        <activity android:name=".activity.ManagerCastActivity"></activity>
+        <activity android:name=".activity.UserPickupActivity" />
+        <activity android:name=".activity.ManagerReceiveActivity" />
+        <activity android:name=".activity.UserReturnActivity" />
         <activity android:name=".activity.HomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,6 +35,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".activity.TCManageActivity" />
     </application>
 
 </manifest>

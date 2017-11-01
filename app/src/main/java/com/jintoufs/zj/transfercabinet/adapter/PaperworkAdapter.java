@@ -33,9 +33,10 @@ public class PaperworkAdapter extends RecyclerView.Adapter<PaperworkAdapter.PWHo
     @Override
     public void onBindViewHolder(PWHolder holder, int position) {
         Paperwork paperwork = paperworkList.get(position);
-        holder.tv_context.setText("姓名：" + paperwork.getUsername() + "    性别：" + paperwork.getSex() + "    出生日期：" + paperwork.getBirthDate() +
-                "    民族：" + paperwork.getNation() + "\n身份证号：" + paperwork.getIDNumber() + "    联系电话：" + paperwork.getPhone() + "    所属机构：" + paperwork.getAgency() +
-                "\n证件类型：" + paperwork.getType() + "    证件号：" + paperwork.getNumber() + "    物理序号：" + paperwork.getPhyNumber());
+        holder.tv_context.setText("姓名：" + paperwork.getUsername() + "      性别：" + paperwork.getSex() + "      出生日期：" + paperwork.getBirthDate() +
+                "      民族：" + paperwork.getNation() + "\n身份证号：" + paperwork.getIDNumber() + "      联系电话：" + paperwork.getPhone() +
+                "\n证件类型：" + paperwork.getType() + "      证件号：" + paperwork.getNumber() +
+                "\n所属机构：" + paperwork.getAgency() +"      物理序号：" + paperwork.getPhyNumber());
 //        holder.image.setImageResource(paperwork.getImage());
     }
 

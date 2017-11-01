@@ -12,13 +12,14 @@ import com.jintoufs.zj.transfercabinet.R;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 
 /**
- * 取件
+ * 申领人取件
  * Created by zj on 2017/9/6.
  */
 
-public class PickupActivity extends BaseActivity {
+public class UserPickupActivity extends BaseActivity {
 
     @BindView(R.id.tv_title)
     TextView tvTitle;
@@ -41,10 +42,12 @@ public class PickupActivity extends BaseActivity {
     @BindView(R.id.tv_time)
     TextView tvTime;
 
+    private Unbinder unbinder;
+
     @Override
     public void initView() {
         setContentView(R.layout.activity_pickup);
-        ButterKnife.bind(this);
+        unbinder = ButterKnife.bind(this);
     }
 
     @OnClick({R.id.btn_sure, R.id.btn_back})
@@ -55,5 +58,13 @@ public class PickupActivity extends BaseActivity {
             case R.id.btn_back:
                 break;
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (unbinder != null){
+            unbinder.unbind();
+        }
+        super.onDestroy();
     }
 }

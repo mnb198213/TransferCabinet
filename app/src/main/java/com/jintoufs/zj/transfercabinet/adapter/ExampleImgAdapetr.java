@@ -30,7 +30,8 @@ public class ExampleImgAdapetr extends RecyclerView.Adapter<ExampleImgAdapetr.Im
 
     @Override
     public void onBindViewHolder(ImgHolder holder, int position) {
-        holder.img.setImageResource(imgs[position]);
+//        holder.img.setImageResource(imgs[position]);
+        holder.img.setBackgroundResource(imgs[position]);
     }
 
     @Override

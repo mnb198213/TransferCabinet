@@ -35,7 +35,7 @@
                 android:gravity="center"
                 android:text="未登录"
                 android:textColor="@color/smart_text_color"
-                android:textSize="@dimen/btn_text_size" />
+                android:textSize="20sp" />
 
             <Button
                 android:id="@+id/btn_back"

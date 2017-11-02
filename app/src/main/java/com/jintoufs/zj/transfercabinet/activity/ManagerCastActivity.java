@@ -2,6 +2,7 @@ package com.jintoufs.zj.transfercabinet.activity;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.Button;
 import android.widget.ListView;
 
@@ -18,11 +19,11 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 /**
- * 库管员投件
+ * 库管员存证
  * Created by zj on 2017/9/6.
  */
 
-public class ManagerCastActivity extends SerialPortActivity {
+public class ManagerCastActivity extends AppCompatActivity {
 
 
     @Override
@@ -30,17 +31,5 @@ public class ManagerCastActivity extends SerialPortActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cast);
 
-    }
-
-
-    @Override
-    protected void onDataReceived(final byte[] buffer, final int size) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                String info = new String(buffer).toString().trim();
-
-            }
-        });
     }
 }

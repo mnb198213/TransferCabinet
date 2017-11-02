@@ -23,8 +23,8 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".activity.TestPortActivity"></activity>
-        <activity android:name=".activity.ManagerCastActivity"></activity>
+        <activity android:name=".activity.TestPortActivity"/>
+        <activity android:name=".activity.ManagerCastActivity"/>
         <activity android:name=".activity.UserPickupActivity" />
         <activity android:name=".activity.ManagerReceiveActivity" />
         <activity android:name=".activity.UserReturnActivity" />
@@ -36,6 +36,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".activity.TCManageActivity" />
+        <activity android:name=".activity.CabinetMonitorActivity"/>
     </application>
 
 </manifest>

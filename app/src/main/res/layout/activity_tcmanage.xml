@@ -34,9 +34,8 @@
                 android:layout_height="@dimen/btn_height"
                 android:gravity="center"
                 android:text="未登录"
-                android:background="@android:color/white"
                 android:textColor="@color/smart_text_color"
-                android:textSize="@dimen/btn_text_size" />
+                android:textSize="20sp" />
 
             <Button
                 android:id="@+id/btn_back"

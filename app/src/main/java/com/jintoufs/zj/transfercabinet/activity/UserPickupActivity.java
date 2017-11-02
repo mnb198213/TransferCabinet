@@ -56,6 +56,7 @@ public class UserPickupActivity extends BaseActivity {
             case R.id.btn_sure:
                 break;
             case R.id.btn_back:
+                finish();
                 break;
         }
     }

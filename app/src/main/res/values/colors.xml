@@ -6,8 +6,10 @@
 
     <color name="title_text_color">#454545</color>
     <color name="home_small_title">#4e4a4b</color>
-    
     <color name="light_blue">#97CDFF</color>
-
     <color name="smart_text_color">#454545</color>
+    <color name="null_color">#696969</color>
+    <color name="selected_color">#FFED8A</color>
+    <color name="opened_color">#ff229d6e</color>
+    <color name="saved_color">#1E90FF</color>
 </resources>

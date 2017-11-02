@@ -1,5 +1,6 @@
 package com.jintoufs.zj.transfercabinet.activity;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -10,6 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.basekit.base.BaseActivity;
+import com.basekit.util.ToastUtils;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.adapter.ExampleImgAdapetr;
 import com.jintoufs.zj.transfercabinet.adapter.PaperworkAdapter;
@@ -53,6 +55,7 @@ public class UserReturnActivity extends BaseActivity {
     private Unbinder unbinder;
     private PaperworkAdapter paperworkAdapter;
     private List<Paperwork> paperworkList;
+    private Context mContext;
 
     private ExampleImgAdapetr exampleImgAdapetr;
     private int[] imgs = {R.mipmap.empty_img, R.mipmap.empty_img, R.mipmap.empty_img, R.mipmap.empty_img};
@@ -62,7 +65,8 @@ public class UserReturnActivity extends BaseActivity {
         public void handleMessage(Message msg) {
             if (msg.what == 1) {
                 String time = TimeUtil.DateToString(new Date());
-                tvTime.setText(time);
+                if (tvTime != null)
+                    tvTime.setText(time);
             }
             super.handleMessage(msg);
         }
@@ -71,6 +75,7 @@ public class UserReturnActivity extends BaseActivity {
     @Override
     public void initData() {
         super.initData();
+        mContext = this;
         paperworkList = new ArrayList<>();
         Paperwork paperwork = new Paperwork();
         paperwork.setUsername("尚小涵");
@@ -109,10 +114,12 @@ public class UserReturnActivity extends BaseActivity {
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btn_back:
+                finish();
                 break;
             case R.id.btn_hand_do:
                 break;
             case R.id.btn_finish:
+                ToastUtils.showShortToast(mContext, "存证完成");
                 break;
         }
     }

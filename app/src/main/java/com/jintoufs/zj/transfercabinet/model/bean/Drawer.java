@@ -5,12 +5,13 @@ package com.jintoufs.zj.transfercabinet.model.bean;
  */
 
 public class Drawer {
-    private String state;
     private String name;
     private int raw;
     private int column;
     private String department;
     private String userId;
+    private String state;//记录是否为空
+    private boolean isOpen = false;//记录是否打开
 
     public String getState() {
         return state;
@@ -58,5 +59,13 @@ public class Drawer {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public boolean isOpen() {
+        return isOpen;
+    }
+
+    public void setOpen(boolean open) {
+        isOpen = open;
     }
 }

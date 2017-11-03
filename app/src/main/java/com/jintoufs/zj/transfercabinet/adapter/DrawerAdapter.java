@@ -1,12 +1,9 @@
 package com.jintoufs.zj.transfercabinet.adapter;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.jintoufs.zj.transfercabinet.R;
@@ -22,19 +19,22 @@ import java.util.List;
 public class DrawerAdapter extends RecyclerView.Adapter<DrawerAdapter.DrawHolder> {
     private Context mContext;
     private List<Drawer> drawerList;
-    private boolean isOpened = false;
-    private List<Boolean> isSelecteds;
+    private List<Boolean> isSelected;
     private OnItemDrawerClickListener onItemDrawerClickListener;
 
     public DrawerAdapter(Context mContext, List<Drawer> drawers) {
         this.mContext = mContext;
         this.drawerList = drawers;
-        isSelecteds = new ArrayList<>();
-        for (int i = 0; i < drawers.size(); i++) {
-            isSelecteds.add(false);
-        }
+        isSelected = new ArrayList<>();
+        clearSelected();
     }
 
+    public void clearSelected(){
+        isSelected.clear();
+        for (int i = 0; i < drawerList.size(); i++) {
+            isSelected.add(false);
+        }
+    }
     @Override
     public DrawHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new DrawHolder(View.inflate(mContext, R.layout.item_draw_viewer, null));
@@ -44,34 +44,35 @@ public class DrawerAdapter extends RecyclerView.Adapter<DrawerAdapter.DrawHolder
     public void onBindViewHolder(DrawHolder holder, final int position) {
         Drawer drawer = drawerList.get(position);
         String statue = drawer.getState();
-        if (statue.equals("0") && !isSelecteds.get(position) && !isOpened) {//空柜子,未选中，未打开
-            holder.tv_name.setVisibility(View.INVISIBLE);
-        } else if (statue.equals("0") && !isSelecteds.get(position) && !isOpened) {//空柜子,已选中，未打开
-            holder.tv_name.setVisibility(View.INVISIBLE);
-            holder.iv_drawer.setBackgroundColor(mContext.getResources().getColor(R.color.selected_color));
-        } else if (statue.equals("0") && !isSelecteds.get(position) && !isOpened) {//空柜子,未选中，已打开
-            holder.tv_name.setVisibility(View.INVISIBLE);
-            holder.iv_drawer.setBackgroundColor(mContext.getResources().getColor(R.color.opened_color));
-        } else if (statue.equals("1") && !isSelecteds.get(position) && !isOpened) {//已使用的柜子,未选中，未打开
-            holder.tv_name.setVisibility(View.INVISIBLE);
-            holder.iv_drawer.setBackgroundColor(mContext.getResources().getColor(R.color.saved_color));
-        } else if (statue.equals("1") && isSelecteds.get(position) && !isOpened) {//已使用的柜子,已选中，未打开
-            holder.tv_name.setVisibility(View.VISIBLE);
+        if (statue.equals("0") && !isSelected.get(position) && !drawer.isOpen()) {//空柜子,未选中，未打开
             holder.tv_name.setText(drawer.getName());
-            holder.iv_drawer.setBackgroundColor(mContext.getResources().getColor(R.color.selected_color));
-        } else if (statue.equals("1") && !isSelecteds.get(position) && isOpened) {//已使用的柜子,未选中，已打开
-            holder.tv_name.setVisibility(View.VISIBLE);
+            holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.null_color));
+        } else if (statue.equals("0") && isSelected.get(position) && !drawer.isOpen()) {//空柜子,已选中，未打开
             holder.tv_name.setText(drawer.getName());
-            holder.iv_drawer.setBackgroundColor(mContext.getResources().getColor(R.color.opened_color));
+            holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.selected_color));
+        } else if (statue.equals("0") && !isSelected.get(position) && drawer.isOpen()) {//空柜子,未选中，已打开
+            holder.tv_name.setText(drawer.getName());
+            holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.opened_color));
+        } else if (statue.equals("0") && isSelected.get(position) && drawer.isOpen()) {//空箱子，已选中，已打开
+            holder.tv_name.setText(drawer.getName());
+            holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.selected_color));
+        } else if (statue.equals("1") && !isSelected.get(position) && !drawer.isOpen()) {//已使用的柜子,未选中，未打开
+            holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.saved_color));
+        } else if (statue.equals("1") && isSelected.get(position) && !drawer.isOpen()) {//已使用的柜子,已选中，未打开
+            holder.tv_name.setText(drawer.getName());
+            holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.selected_color));
+        } else if (statue.equals("1") && !isSelected.get(position) && drawer.isOpen()) {//已使用的柜子,未选中，已打开
+            holder.tv_name.setText(drawer.getName());
+            holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.opened_color));
+        } else if (statue.equals("1") && isSelected.get(position) && drawer.isOpen()) {//已使用的柜子,已选中，已打开
+            holder.tv_name.setText(drawer.getName());
+            holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.selected_color));
         }
-        holder.fl_drawer.setOnClickListener(new View.OnClickListener() {
+        holder.tv_name.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                isSelecteds.clear();
-                for (int i = 0; i < drawerList.size(); i++) {
-                    isSelecteds.add(false);
-                }
-                isSelecteds.set(position, true);
+                clearSelected();
+                isSelected.set(position, true);
                 if (onItemDrawerClickListener != null) {
                     onItemDrawerClickListener.onItemDrawerClick(position);
                 }
@@ -93,15 +94,11 @@ public class DrawerAdapter extends RecyclerView.Adapter<DrawerAdapter.DrawHolder
     }
 
     class DrawHolder extends RecyclerView.ViewHolder {
-        private ImageView iv_drawer;
         private TextView tv_name;
-        private FrameLayout fl_drawer;
 
         public DrawHolder(View itemView) {
             super(itemView);
-            iv_drawer = (ImageView) itemView.findViewById(R.id.iv_drawer);
             tv_name = (TextView) itemView.findViewById(R.id.tv_name);
-            fl_drawer = (FrameLayout) itemView.findViewById(R.id.fl_drawer);
         }
     }
 }

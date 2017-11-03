@@ -105,7 +105,6 @@
                         android:layout_width="180dp"
                         android:layout_height="wrap_content"
                         android:background="@drawable/shape_btn_sure"
-                        android:text="打开单个柜子"
                         android:textSize="@dimen/btn_text_size" />
 
                     <Button
@@ -114,7 +113,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="30dp"
                         android:background="@drawable/shape_btn_sure"
-                        android:text="打开所有柜子"
                         android:textSize="@dimen/btn_text_size" />
                 </LinearLayout>
 

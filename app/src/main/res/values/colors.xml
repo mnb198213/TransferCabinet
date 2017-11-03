@@ -12,4 +12,5 @@
     <color name="selected_color">#FFED8A</color>
     <color name="opened_color">#ff229d6e</color>
     <color name="saved_color">#1E90FF</color>
+    <color name="white">#ffffff</color>
 </resources>

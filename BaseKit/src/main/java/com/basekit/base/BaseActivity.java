@@ -28,9 +28,10 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         mCurActivity = AppManager.getInstance().getCurrent();
-        if(getRequestedOrientation()!=ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE){
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        }
+        //强制横屏
+//        if(getRequestedOrientation()!=ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE){
+//            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+//        }
     }
 
     @Override
@@ -49,31 +50,33 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     /**
      * 显示短Toast
+     *
      * @param text
      */
-    public void showShortToast(String text){
-        ToastUtils.showShortToast(this,text);
+    public void showShortToast(String text) {
+        ToastUtils.showShortToast(this, text);
     }
 
     /**
      * 显示长Toast
+     *
      * @param text
      */
-    public void showLongToast(String text){
+    public void showLongToast(String text) {
         ToastUtils.showLongToast(this, text);
     }
 
     /**
      * 完全退出
      */
-    protected void exit(){
+    protected void exit() {
         AppManager.getInstance().removeAll();
     }
 
     /**
      * 关闭当前activity
      */
-    public void finishCurrent(){
+    public void finishCurrent() {
         AppManager.getInstance().removeCurrent();
     }
 

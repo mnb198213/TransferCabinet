@@ -13,7 +13,7 @@ import com.basekit.util.ToastUtils;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.adapter.CabinetInfoAdapter;
 import com.jintoufs.zj.transfercabinet.adapter.TitleAdapter;
-import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfo;
+import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfoBean;
 import com.jintoufs.zj.transfercabinet.util.DensityUtil;
 import com.jintoufs.zj.transfercabinet.widget.SpacePwItemDecoration;
 import com.jintoufs.zj.transfercabinet.widget.SpaceTitleItemDecoration;
@@ -50,7 +50,7 @@ public class ManagerReceiveActivity extends BaseActivity {
 
     private TitleAdapter titleAdapter;
     private CabinetInfoAdapter cabinetInfoAdapter;
-    private List<CabinetInfo> cabinetInfoList;
+    private List<CabinetInfoBean> cabinetInfoBeanList;
 
     @Override
     public void initData() {
@@ -58,17 +58,17 @@ public class ManagerReceiveActivity extends BaseActivity {
         mContext = this;
         titleAdapter = new TitleAdapter(mContext, new String[]{"证件类型", "人员", "机构/部门", "身份证号", "交接柜", "柜门号", "操作"});
 
-        cabinetInfoList = new ArrayList<>();
-        CabinetInfo cabinetInfo = new CabinetInfo();
-        cabinetInfo.setAgency("外联部");
-        cabinetInfo.setType("港澳通行证");
-        cabinetInfo.setCabinetId("1215");
-        cabinetInfo.setIDNumber("510235662365412568");
-        cabinetInfo.setUsername("李敖");
-        cabinetInfo.setDrawerId("2106");
-        cabinetInfoList.add(cabinetInfo);
-        cabinetInfoList.add(cabinetInfo);
-        cabinetInfoAdapter = new CabinetInfoAdapter(mContext, cabinetInfoList);
+        cabinetInfoBeanList = new ArrayList<>();
+        CabinetInfoBean cabinetInfoBean = new CabinetInfoBean();
+        cabinetInfoBean.setAgency("外联部");
+        cabinetInfoBean.setType("港澳通行证");
+        cabinetInfoBean.setCabinetId("1215");
+        cabinetInfoBean.setIDNumber("510235662365412568");
+        cabinetInfoBean.setUsername("李敖");
+        cabinetInfoBean.setDrawerId("2106");
+        cabinetInfoBeanList.add(cabinetInfoBean);
+        cabinetInfoBeanList.add(cabinetInfoBean);
+        cabinetInfoAdapter = new CabinetInfoAdapter(mContext, cabinetInfoBeanList);
     }
 
     @Override

@@ -8,7 +8,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.jintoufs.zj.transfercabinet.R;
-import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfo;
+import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfoBean;
 
 import java.util.List;
 
@@ -18,12 +18,12 @@ import java.util.List;
 
 public class CabinetInfoAdapter extends RecyclerView.Adapter<CabinetInfoAdapter.CabinetHolder> {
     private Context mContext;
-    private List<CabinetInfo> cabinetInfoList;
+    private List<CabinetInfoBean> cabinetInfoBeanList;
     private OnOpenDrawerClickListener onOpenDrawerClickListener;
 
-    public CabinetInfoAdapter(Context mContext, List<CabinetInfo> cabinetInfoList) {
+    public CabinetInfoAdapter(Context mContext, List<CabinetInfoBean> cabinetInfoBeanList) {
         this.mContext = mContext;
-        this.cabinetInfoList = cabinetInfoList;
+        this.cabinetInfoBeanList = cabinetInfoBeanList;
     }
 
     @Override
@@ -33,13 +33,13 @@ public class CabinetInfoAdapter extends RecyclerView.Adapter<CabinetInfoAdapter.
 
     @Override
     public void onBindViewHolder(CabinetHolder holder, final int position) {
-        CabinetInfo cabinetInfo = cabinetInfoList.get(position);
-        holder.tv_type.setText(cabinetInfo.getType());
-        holder.tv_username.setText(cabinetInfo.getUsername());
-        holder.tv_agency.setText(cabinetInfo.getAgency());
-        holder.tv_IDNumber.setText(cabinetInfo.getIDNumber());
-        holder.tv_cabinetId.setText(cabinetInfo.getCabinetId());
-        holder.tv_drawerId.setText(cabinetInfo.getDrawerId());
+        CabinetInfoBean cabinetInfoBean = cabinetInfoBeanList.get(position);
+        holder.tv_type.setText(cabinetInfoBean.getType());
+        holder.tv_username.setText(cabinetInfoBean.getUsername());
+        holder.tv_agency.setText(cabinetInfoBean.getAgency());
+        holder.tv_IDNumber.setText(cabinetInfoBean.getIDNumber());
+        holder.tv_cabinetId.setText(cabinetInfoBean.getCabinetId());
+        holder.tv_drawerId.setText(cabinetInfoBean.getDrawerId());
         holder.btn_open_drawer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -60,7 +60,7 @@ public class CabinetInfoAdapter extends RecyclerView.Adapter<CabinetInfoAdapter.
 
     @Override
     public int getItemCount() {
-        return cabinetInfoList.size();
+        return cabinetInfoBeanList.size();
     }
 
     class CabinetHolder extends RecyclerView.ViewHolder {

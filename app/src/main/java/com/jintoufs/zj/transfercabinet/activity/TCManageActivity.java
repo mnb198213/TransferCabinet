@@ -12,6 +12,9 @@ import android.widget.TextView;
 
 import com.basekit.base.BaseActivity;
 import com.jintoufs.zj.transfercabinet.R;
+import com.jintoufs.zj.transfercabinet.util.TimeUtil;
+
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -58,6 +61,8 @@ public class TCManageActivity extends BaseActivity {
         } else {
             tvStatue.setText("张三  已登录");
         }
+
+        tvTime.setText(TimeUtil.DateToString(new Date()));
     }
 
     @OnClick({R.id.tv_statue, R.id.btn_back, R.id.tv_take, R.id.tv_save, R.id.tv_monitor})

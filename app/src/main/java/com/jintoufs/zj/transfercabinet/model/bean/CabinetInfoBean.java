@@ -4,7 +4,7 @@ package com.jintoufs.zj.transfercabinet.model.bean;
  * Created by zj on 2017/11/1.
  */
 
-public class CabinetInfo {
+public class CabinetInfoBean {
     private String Type;
     private String username;
     private String agency;

@@ -41,7 +41,7 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         unbinder = ButterKnife.bind(this);
         mContext = this;
-        tvTime.setText(TimeUtil.DateToDayString(new Date()));
+        tvTime.setText(TimeUtil.DateToString(new Date()));
     }
 
     @OnClick({R.id.tv_take, R.id.tv_save, R.id.tv_manager})

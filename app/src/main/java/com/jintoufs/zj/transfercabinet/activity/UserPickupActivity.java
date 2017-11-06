@@ -15,6 +15,9 @@ import android.widget.TextView;
 import com.basekit.base.BaseActivity;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.model.bean.Drawer;
+import com.jintoufs.zj.transfercabinet.util.TimeUtil;
+
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -108,6 +111,8 @@ public class UserPickupActivity extends BaseActivity {
                 }
             }
         });
+
+        tvTime.setText(TimeUtil.DateToString(new Date()));
     }
 
     @OnClick({R.id.btn_sure, R.id.btn_back})

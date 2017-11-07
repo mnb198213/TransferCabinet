@@ -25,7 +25,8 @@
 
         <activity android:name=".activity.TestPortActivity"/>
         <activity android:name=".activity.ManagerCastActivity"/>
-        <activity android:name=".activity.UserPickupActivity" />
+        <activity android:name=".activity.UserPickupActivity"
+            android:windowSoftInputMode="stateVisible|adjustResize" />
         <activity android:name=".activity.ManagerReceiveActivity" />
         <activity android:name=".activity.UserReturnActivity" />
         <activity android:name=".activity.HomeActivity">

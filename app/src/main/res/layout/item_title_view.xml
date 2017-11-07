@@ -8,9 +8,9 @@
         android:id="@+id/tv_title_item"
         android:layout_width="@dimen/title_list_item_width"
         android:layout_height="@dimen/title_list_item_height"
-        android:background="#CCCCCC"
+        android:background="#737373"
         android:gravity="center"
         android:text="dfkjvndfvkvndklv"
-        android:textColor="@color/smart_text_color"
+        android:textColor="#B0B0B0"
         android:textSize="@dimen/btn_text_size" />
 </LinearLayout>

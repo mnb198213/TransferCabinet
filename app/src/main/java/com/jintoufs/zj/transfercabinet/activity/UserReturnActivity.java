@@ -66,7 +66,7 @@ public class UserReturnActivity extends BaseActivity {
             if (msg.what == 1) {
                 String time = TimeUtil.DateToString(new Date());
                 if (tvTime != null)
-                    tvTime.setText(time);
+                    tvTime.setText("当前时间："+time);
             }
             super.handleMessage(msg);
         }

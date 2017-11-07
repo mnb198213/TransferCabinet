@@ -62,7 +62,7 @@ public class TCManageActivity extends BaseActivity {
             tvStatue.setText("张三  已登录");
         }
 
-        tvTime.setText(TimeUtil.DateToString(new Date()));
+        tvTime.setText("当前时间："+TimeUtil.DateToString(new Date()));
     }
 
     @OnClick({R.id.tv_statue, R.id.btn_back, R.id.tv_take, R.id.tv_save, R.id.tv_monitor})

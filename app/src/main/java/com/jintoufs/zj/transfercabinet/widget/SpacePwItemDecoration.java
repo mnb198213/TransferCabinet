@@ -33,6 +33,6 @@ public class SpacePwItemDecoration extends RecyclerView.ItemDecoration {
     @Override
     public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
 //        super.onDraw(c, parent, state);
-        c.drawColor(mContext.getResources().getColor(R.color.smart_text_color));
+        c.drawColor(mContext.getResources().getColor(R.color.yellow));
     }
 }

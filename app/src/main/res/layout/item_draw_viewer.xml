@@ -9,6 +9,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:textColor="@color/smart_text_color"
-        android:textSize="20sp" />
+        android:textColor="@color/theme_background"
+        android:textSize="20sp"/>
 </LinearLayout>

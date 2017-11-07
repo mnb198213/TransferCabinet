@@ -5,16 +5,18 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.basekit.base.BaseActivity;
 import com.jintoufs.zj.transfercabinet.R;
-import com.jintoufs.zj.transfercabinet.model.bean.Drawer;
 import com.jintoufs.zj.transfercabinet.util.TimeUtil;
 
 import java.util.Date;
@@ -51,12 +53,15 @@ public class UserPickupActivity extends BaseActivity {
     Button btnBack;
     @BindView(R.id.tv_time)
     TextView tvTime;
+    @BindView(R.id.rl_all)
+    RelativeLayout rlAll;
 
     private Unbinder unbinder;
     private Context mContext;
 
     @Override
     public void initView() {
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
         setContentView(R.layout.activity_pickup);
         unbinder = ButterKnife.bind(this);
         mContext = this;
@@ -101,10 +106,18 @@ public class UserPickupActivity extends BaseActivity {
                 }
             }
         });
+        etNumber06.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                etNumber06.setCursorVisible(true);//显示光标
+                return false;
+            }
+        });
         etNumber06.addTextChangedListener(new MyTextWatcher() {
             @Override
             void newTextChanged(CharSequence charSequence) {
                 if (charSequence.toString().length() == 1) {
+                    etNumber06.setCursorVisible(false);//隐藏光标
                     //软键盘消失
                     InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                     imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
@@ -112,10 +125,10 @@ public class UserPickupActivity extends BaseActivity {
             }
         });
 
-        tvTime.setText(TimeUtil.DateToString(new Date()));
+        tvTime.setText("当前时间："+TimeUtil.DateToString(new Date()));
     }
 
-    @OnClick({R.id.btn_sure, R.id.btn_back})
+    @OnClick({R.id.btn_sure, R.id.btn_back,R.id.rl_all})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btn_sure:
@@ -123,6 +136,10 @@ public class UserPickupActivity extends BaseActivity {
                 break;
             case R.id.btn_back:
                 finish();
+                break;
+            case R.id.rl_all://软键盘消失
+                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
                 break;
         }
     }
@@ -151,6 +168,13 @@ public class UserPickupActivity extends BaseActivity {
         });
         window.setContentView(view);
         dialog.show();
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // TODO: add setContentView(...) invocation
+        ButterKnife.bind(this);
     }
 
     abstract class MyTextWatcher implements TextWatcher {

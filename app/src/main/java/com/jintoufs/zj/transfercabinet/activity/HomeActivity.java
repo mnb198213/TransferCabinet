@@ -2,6 +2,7 @@ package com.jintoufs.zj.transfercabinet.activity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -41,7 +42,7 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         unbinder = ButterKnife.bind(this);
         mContext = this;
-        tvTime.setText(TimeUtil.DateToString(new Date()));
+        tvTime.setText("当前时间："+TimeUtil.DateToString(new Date()));
     }
 
     @OnClick({R.id.tv_take, R.id.tv_save, R.id.tv_manager})

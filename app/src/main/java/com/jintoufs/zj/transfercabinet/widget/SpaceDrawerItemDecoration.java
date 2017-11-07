@@ -31,6 +31,6 @@ public class SpaceDrawerItemDecoration extends RecyclerView.ItemDecoration {
 
     @Override
     public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
-        c.drawColor(context.getResources().getColor(R.color.white));
+        c.drawColor(context.getResources().getColor(R.color.theme_background));
     }
 }

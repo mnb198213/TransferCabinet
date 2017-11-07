@@ -3,102 +3,102 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:background="@android:color/white">
+    android:background="@color/title_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
-        android:background="@android:color/white">
+        android:background="@color/title_background">
         <TextView
             android:id="@+id/tv_type"
             android:layout_width="@dimen/title_list_item_width"
             android:layout_height="@dimen/title_list_item_height"
             android:layout_gravity="center"
-            android:background="@android:color/white"
+            android:background="@color/title_background"
             android:gravity="center"
             android:textColor="@color/smart_text_color" />
 
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/smart_text_color" />
+            android:background="@color/yellow" />
 
         <TextView
             android:id="@+id/tv_username"
             android:layout_width="@dimen/title_list_item_width"
             android:layout_height="@dimen/title_list_item_height"
             android:layout_gravity="center"
-            android:background="@android:color/white"
+            android:background="@color/title_background"
             android:gravity="center"
             android:textColor="@color/smart_text_color" />
 
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/smart_text_color" />
+            android:background="@color/yellow" />
 
         <TextView
             android:id="@+id/tv_agency"
             android:layout_width="@dimen/title_list_item_width"
             android:layout_height="@dimen/title_list_item_height"
             android:layout_gravity="center"
-            android:background="@android:color/white"
+            android:background="@color/title_background"
             android:gravity="center"
             android:textColor="@color/smart_text_color" />
 
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/smart_text_color" />
+            android:background="@color/yellow" />
 
         <TextView
             android:id="@+id/tv_IDNumber"
             android:layout_width="@dimen/title_list_item_width"
             android:layout_height="@dimen/title_list_item_height"
             android:layout_gravity="center"
-            android:background="@android:color/white"
+            android:background="@color/title_background"
             android:gravity="center"
             android:textColor="@color/smart_text_color" />
 
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/smart_text_color" />
+            android:background="@color/yellow" />
 
         <TextView
             android:id="@+id/tv_cabinetId"
             android:layout_width="@dimen/title_list_item_width"
             android:layout_height="@dimen/title_list_item_height"
             android:layout_gravity="center"
-            android:background="@android:color/white"
+            android:background="@color/title_background"
             android:gravity="center"
             android:textColor="@color/smart_text_color" />
 
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/smart_text_color" />
+            android:background="@color/yellow" />
 
         <TextView
             android:id="@+id/tv_drawerId"
             android:layout_width="@dimen/title_list_item_width"
             android:layout_height="@dimen/title_list_item_height"
             android:layout_gravity="center"
-            android:background="@android:color/white"
+            android:background="@color/title_background"
             android:gravity="center"
             android:textColor="@color/smart_text_color" />
 
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/smart_text_color" />
+            android:background="@color/yellow" />
 
         <LinearLayout
             android:layout_width="@dimen/title_list_item_width"
             android:layout_height="@dimen/title_list_item_height"
             android:gravity="center_vertical"
-            android:background="@android:color/white"
+            android:background="@color/title_background"
             android:padding="5dp">
             <Button
                 android:id="@+id/btn_open_drawer"

@@ -5,5 +5,5 @@ package com.jintoufs.zj.transfercabinet.config;
  */
 
 public class IpConfig {
-    public static final String IP_HOST = "";
+    public static final String IP_HOST = "http://172.18.200.252:8080/abc_gz/";
 }

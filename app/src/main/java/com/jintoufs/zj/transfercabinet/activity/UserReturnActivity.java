@@ -1,13 +1,19 @@
 package com.jintoufs.zj.transfercabinet.activity;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.basekit.base.BaseActivity;
@@ -15,7 +21,11 @@ import com.basekit.util.ToastUtils;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.adapter.ExampleImgAdapetr;
 import com.jintoufs.zj.transfercabinet.adapter.PaperworkAdapter;
+import com.jintoufs.zj.transfercabinet.model.bean.CUser;
+import com.jintoufs.zj.transfercabinet.model.bean.CertificateVo;
 import com.jintoufs.zj.transfercabinet.model.bean.Paperwork;
+import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
+import com.jintoufs.zj.transfercabinet.net.NetService;
 import com.jintoufs.zj.transfercabinet.util.DensityUtil;
 import com.jintoufs.zj.transfercabinet.util.TimeUtil;
 import com.jintoufs.zj.transfercabinet.widget.SpaceItemLeftDecoration;
@@ -30,9 +40,12 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
- * 申领人还证
+ * 申领人存证
  * Created by zj on 2017/9/6.
  */
 
@@ -54,7 +67,7 @@ public class UserReturnActivity extends BaseActivity {
     TextView tvTime;
     private Unbinder unbinder;
     private PaperworkAdapter paperworkAdapter;
-    private List<Paperwork> paperworkList;
+    private List<CertificateVo> paperworkList;
     private Context mContext;
 
     private ExampleImgAdapetr exampleImgAdapetr;
@@ -66,7 +79,7 @@ public class UserReturnActivity extends BaseActivity {
             if (msg.what == 1) {
                 String time = TimeUtil.DateToString(new Date());
                 if (tvTime != null)
-                    tvTime.setText("当前时间："+time);
+                    tvTime.setText("当前时间：" + time);
             }
             super.handleMessage(msg);
         }
@@ -77,19 +90,6 @@ public class UserReturnActivity extends BaseActivity {
         super.initData();
         mContext = this;
         paperworkList = new ArrayList<>();
-        Paperwork paperwork = new Paperwork();
-        paperwork.setUsername("尚小涵");
-        paperwork.setSex("女");
-        paperwork.setBirthDate("1995.12.12");
-        paperwork.setNation("汗族");
-        paperwork.setIDNumber("510236511220233654");
-        paperwork.setPhone("18363636548");
-        paperwork.setAgency("外联部");
-        paperwork.setType("港澳台通行证");
-        paperwork.setNumber("12351535151513581");
-        paperwork.setPhyNumber("101412554784");
-        paperworkList.add(paperwork);
-        paperworkList.add(paperwork);
         paperworkAdapter = new PaperworkAdapter(this, paperworkList);
 
         exampleImgAdapetr = new ExampleImgAdapetr(this, imgs);
@@ -117,12 +117,58 @@ public class UserReturnActivity extends BaseActivity {
                 finish();
                 break;
             case R.id.btn_hand_do:
+                showInputPaperworkId();
                 break;
             case R.id.btn_finish:
                 ToastUtils.showShortToast(mContext, "存证完成");
                 break;
         }
     }
+
+    private void showInputPaperworkId() {
+        final Dialog dialog = new Dialog(this, R.style.TransparentDialogStyle);
+        dialog.setCanceledOnTouchOutside(false);
+        Window window = dialog.getWindow();
+        View view = View.inflate(mContext, R.layout.dialog_input_view,null);
+        final EditText et_input = (EditText) view.findViewById(R.id.et_input);
+        Button btn_back = (Button) view.findViewById(R.id.btn_back);
+        btn_back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        Button btn_sure = (Button) view.findViewById(R.id.btn_sure);
+        btn_sure.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String paperworkId = et_input.getText().toString().trim();
+                if (TextUtils.isEmpty(paperworkId)) {
+                    ToastUtils.showShortToast(mContext, "证件号不能为空");
+                    return;
+                }
+                Call<ResponseInfo<CertificateVo>> call = NetService.getApiService().getCertificateByNumber(paperworkId);
+                call.enqueue(new Callback<ResponseInfo<CertificateVo>>() {
+                    @Override
+                    public void onResponse(Call<ResponseInfo<CertificateVo>> call, Response<ResponseInfo<CertificateVo>> response) {
+                        if (response.body() != null) {
+                            CertificateVo certificateVo = response.body().getData();
+                            paperworkList.add(certificateVo);
+                            paperworkAdapter.notifyDataSetChanged();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseInfo<CertificateVo>> call, Throwable t) {
+                        ToastUtils.showShortToast(mContext, t.getMessage());
+                    }
+                });
+            }
+        });
+        window.setContentView(view);
+        dialog.show();
+    }
+
 
     class TimeThread extends Thread {
         @Override

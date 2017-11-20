@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,7 +17,11 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.basekit.base.BaseActivity;
+import com.basekit.util.StringUtils;
+import com.basekit.util.ToastUtils;
 import com.jintoufs.zj.transfercabinet.R;
+import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
+import com.jintoufs.zj.transfercabinet.net.NetService;
 import com.jintoufs.zj.transfercabinet.util.TimeUtil;
 
 import java.util.Date;
@@ -25,6 +30,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * 申领人取件
@@ -125,14 +133,51 @@ public class UserPickupActivity extends BaseActivity {
             }
         });
 
-        tvTime.setText("当前时间："+TimeUtil.DateToString(new Date()));
+        tvTime.setText("当前时间：" + TimeUtil.DateToString(new Date()));
     }
 
-    @OnClick({R.id.btn_sure, R.id.btn_back,R.id.rl_all})
+    @OnClick({R.id.btn_sure, R.id.btn_back, R.id.rl_all})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btn_sure:
-                showNoticeDialog("抽屉已打开，请取走你的证件");
+                String code01 = etNumber01.getText().toString().trim();
+                String code02 = etNumber02.getText().toString().trim();
+                String code03 = etNumber03.getText().toString().trim();
+                String code04 = etNumber04.getText().toString().trim();
+                String code05 = etNumber05.getText().toString().trim();
+                String code06 = etNumber06.getText().toString().trim();
+                if (TextUtils.isEmpty(code01) || TextUtils.isEmpty(code02) || TextUtils.isEmpty(code03)
+                        || TextUtils.isEmpty(code04) || TextUtils.isEmpty(code05) || TextUtils.isEmpty(code06)) {
+                    ToastUtils.showShortToast(mContext, "验证码不全，请更正");
+                    return;
+                }
+                String code = (code01 + code02 + code03 + code04 + code05 + code06).trim();
+                Call<ResponseInfo<String>> call = NetService.getApiService().validateMessageCode(code);
+                call.enqueue(new Callback<ResponseInfo<String>>() {
+                    @Override
+                    public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
+                        ResponseInfo<String> responseInfo = response.body();
+                        if (responseInfo != null) {
+                            if ("200".equals(responseInfo.getCode())) {
+                                String userId = responseInfo.getData();
+                                if (userId == null || "null".equals(userId)) {
+                                    showNoticeDialog("验证码错误，请检查验证码！");
+                                } else {
+                                    //打开当前用户的柜子。。。。。。。。。。。。。。。。
+                                    showNoticeDialog("抽屉已打开，请取走你的证件！");
+                                }
+                            } else {
+                                showNoticeDialog("请求返回错误，请检查服务器");
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
+                        ToastUtils.showShortToast(mContext, t.getMessage());
+                    }
+                });
+
                 break;
             case R.id.btn_back:
                 finish();
@@ -168,13 +213,6 @@ public class UserPickupActivity extends BaseActivity {
         });
         window.setContentView(view);
         dialog.show();
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        // TODO: add setContentView(...) invocation
-        ButterKnife.bind(this);
     }
 
     abstract class MyTextWatcher implements TextWatcher {

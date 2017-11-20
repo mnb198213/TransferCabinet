@@ -7,7 +7,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.MemoryCategory;
 import com.jintoufs.zj.transfercabinet.R;
+import com.jintoufs.zj.transfercabinet.model.bean.CertificateVo;
 import com.jintoufs.zj.transfercabinet.model.bean.Paperwork;
 
 import java.util.List;
@@ -18,9 +21,9 @@ import java.util.List;
 
 public class PaperworkAdapter extends RecyclerView.Adapter<PaperworkAdapter.PWHolder> {
     private Context mContext;
-    private List<Paperwork> paperworkList;
+    private List<CertificateVo> paperworkList;
 
-    public PaperworkAdapter(Context mContext, List<Paperwork> paperworkList) {
+    public PaperworkAdapter(Context mContext, List<CertificateVo> paperworkList) {
         this.mContext = mContext;
         this.paperworkList = paperworkList;
     }
@@ -32,12 +35,12 @@ public class PaperworkAdapter extends RecyclerView.Adapter<PaperworkAdapter.PWHo
 
     @Override
     public void onBindViewHolder(PWHolder holder, int position) {
-        Paperwork paperwork = paperworkList.get(position);
-        holder.tv_context.setText("姓名：" + paperwork.getUsername() + "      性别：" + paperwork.getSex() + "      出生日期：" + paperwork.getBirthDate() +
-                "      民族：" + paperwork.getNation() + "\n身份证号：" + paperwork.getIDNumber() + "      联系电话：" + paperwork.getPhone() +
-                "\n证件类型：" + paperwork.getType() + "      证件号：" + paperwork.getNumber() +
-                "\n所属机构：" + paperwork.getAgency() +"      物理序号：" + paperwork.getPhyNumber());
-//        holder.image.setImageResource(paperwork.getImage());
+        CertificateVo paperwork = paperworkList.get(position);
+        holder.tv_context.setText("姓名：" + paperwork.getUserName() + "      性别：" + paperwork.getSex() + "      出生日期：" + paperwork.getBornDate() +
+                "      民族：" + paperwork.getNation() + "\n身份证号：" + paperwork.getIdCard() + "      联系电话：" + paperwork.getPhone() +
+                "\n证件类型：" + paperwork.getTypeName() + "      证件号：" + paperwork.getNumber() +
+                "\n所属机构：" + paperwork.getOrgName() + "      物理序号：" + paperwork.getPhySerialNum());
+        Glide.with(mContext).load(paperwork.getImage()).centerCrop().placeholder(R.mipmap.empty_img).into(holder.image);
     }
 
     @Override

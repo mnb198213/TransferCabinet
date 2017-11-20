@@ -8,7 +8,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.jintoufs.zj.transfercabinet.R;
-import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfoBean;
+import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfoBean11;
 
 import java.util.List;
 
@@ -18,10 +18,10 @@ import java.util.List;
 
 public class CabinetInfoAdapter extends RecyclerView.Adapter<CabinetInfoAdapter.CabinetHolder> {
     private Context mContext;
-    private List<CabinetInfoBean> cabinetInfoBeanList;
+    private List<CabinetInfoBean11> cabinetInfoBeanList;
     private OnOpenDrawerClickListener onOpenDrawerClickListener;
 
-    public CabinetInfoAdapter(Context mContext, List<CabinetInfoBean> cabinetInfoBeanList) {
+    public CabinetInfoAdapter(Context mContext, List<CabinetInfoBean11> cabinetInfoBeanList) {
         this.mContext = mContext;
         this.cabinetInfoBeanList = cabinetInfoBeanList;
     }
@@ -33,7 +33,7 @@ public class CabinetInfoAdapter extends RecyclerView.Adapter<CabinetInfoAdapter.
 
     @Override
     public void onBindViewHolder(CabinetHolder holder, final int position) {
-        CabinetInfoBean cabinetInfoBean = cabinetInfoBeanList.get(position);
+        CabinetInfoBean11 cabinetInfoBean = cabinetInfoBeanList.get(position);
         holder.tv_type.setText(cabinetInfoBean.getType());
         holder.tv_username.setText(cabinetInfoBean.getUsername());
         holder.tv_agency.setText(cabinetInfoBean.getAgency());

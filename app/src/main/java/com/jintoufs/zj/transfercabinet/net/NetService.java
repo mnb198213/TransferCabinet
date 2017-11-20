@@ -8,7 +8,9 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by zoujiang on 2017/2/15.
@@ -31,9 +33,9 @@ public class NetService {
                     return response;
                 }
             };
-            OkHttpClient okHttpClient = new OkHttpClient.Builder().addInterceptor(interceptor).build();
+            OkHttpClient okHttpClient = new OkHttpClient.Builder().addInterceptor(new HttpLoggingInterceptor()).build();
             Retrofit retrofit = new Retrofit.Builder().baseUrl(IpConfig.IP_HOST)
-                    .addConverterFactory(JsonConverterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create())
                     .client(okHttpClient)
                     .build();
             apiService = retrofit.create(ApiService.class);

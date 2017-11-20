@@ -13,7 +13,7 @@ import com.basekit.util.ToastUtils;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.adapter.CabinetInfoAdapter;
 import com.jintoufs.zj.transfercabinet.adapter.TitleAdapter;
-import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfoBean;
+import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfoBean11;
 import com.jintoufs.zj.transfercabinet.util.DensityUtil;
 import com.jintoufs.zj.transfercabinet.widget.SpacePwItemDecoration;
 import com.jintoufs.zj.transfercabinet.widget.SpaceTitleItemDecoration;
@@ -50,7 +50,7 @@ public class ManagerReceiveActivity extends BaseActivity {
 
     private TitleAdapter titleAdapter;
     private CabinetInfoAdapter cabinetInfoAdapter;
-    private List<CabinetInfoBean> cabinetInfoBeanList;
+    private List<CabinetInfoBean11> cabinetInfoBeanList;
 
     @Override
     public void initData() {
@@ -59,7 +59,7 @@ public class ManagerReceiveActivity extends BaseActivity {
         titleAdapter = new TitleAdapter(mContext, new String[]{"证件类型", "人员", "机构/部门", "身份证号", "交接柜", "柜门号", "操作"});
 
         cabinetInfoBeanList = new ArrayList<>();
-        CabinetInfoBean cabinetInfoBean = new CabinetInfoBean();
+        CabinetInfoBean11 cabinetInfoBean = new CabinetInfoBean11();
         cabinetInfoBean.setAgency("外联部");
         cabinetInfoBean.setType("港澳通行证");
         cabinetInfoBean.setCabinetId("1215");

@@ -23,7 +23,7 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".activity.TestPortActivity"/>
+        <activity android:name=".activity.TestPortActivity" />
         <activity android:name=".activity.ManagerCastActivity"/>
         <activity android:name=".activity.UserPickupActivity"
             android:windowSoftInputMode="stateVisible|adjustResize" />

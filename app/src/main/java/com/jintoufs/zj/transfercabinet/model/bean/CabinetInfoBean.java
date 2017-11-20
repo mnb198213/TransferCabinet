@@ -1,62 +1,89 @@
 package com.jintoufs.zj.transfercabinet.model.bean;
 
 /**
- * Created by zj on 2017/11/1.
+ * Created by zj on 2017/11/20.
  */
 
 public class CabinetInfoBean {
-    private String Type;
-    private String username;
-    private String agency;
-    private String IDNumber;
-    private String cabinetId;
-    private String drawerId;
+    //    {"col":30,
+    // "id":"00015fb8740ee003",
+    // "ipAddress":"192.168.0.1",
+    // "location":"一号房间",
+    // "name":"一号柜子",
+    // "orgName":"作业中心",
+    // "row":10,
+    // "serialNo":"0001"}
 
-    public String getType() {
-        return Type;
+    private String col;
+    private String id;
+    private String ipAddress;
+    private String location;
+    private String name;
+    private String orgName;
+    private String row;
+    private String serialNo;
+
+    public String getCol() {
+        return col;
     }
 
-    public void setType(String type) {
-        Type = type;
+    public void setCol(String col) {
+        this.col = col;
     }
 
-    public String getUsername() {
-        return username;
+    public String getId() {
+        return id;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setId(String id) {
+        this.id = id;
     }
 
-    public String getAgency() {
-        return agency;
+    public String getIpAddress() {
+        return ipAddress;
     }
 
-    public void setAgency(String agency) {
-        this.agency = agency;
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
     }
 
-    public String getIDNumber() {
-        return IDNumber;
+    public String getLocation() {
+        return location;
     }
 
-    public void setIDNumber(String IDNumber) {
-        this.IDNumber = IDNumber;
+    public void setLocation(String location) {
+        this.location = location;
     }
 
-    public String getCabinetId() {
-        return cabinetId;
+    public String getName() {
+        return name;
     }
 
-    public void setCabinetId(String cabinetId) {
-        this.cabinetId = cabinetId;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getDrawerId() {
-        return drawerId;
+    public String getOrgName() {
+        return orgName;
     }
 
-    public void setDrawerId(String drawerId) {
-        this.drawerId = drawerId;
+    public void setOrgName(String orgName) {
+        this.orgName = orgName;
+    }
+
+    public String getRow() {
+        return row;
+    }
+
+    public void setRow(String row) {
+        this.row = row;
+    }
+
+    public String getSerialNo() {
+        return serialNo;
+    }
+
+    public void setSerialNo(String serialNo) {
+        this.serialNo = serialNo;
     }
 }

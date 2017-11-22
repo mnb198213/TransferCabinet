@@ -53,6 +53,7 @@ public class ManagerCastActivity extends AppCompatActivity {
                 "\n身份证号：" + "510323654552322562" + "      联系电话：" + "12365652545" + "      所属机构：" + "外联部" +
                 "\n证件类型：" + "港澳通行证" + "      证件号：" + "21135453453453");
         tvCabLocation.setText("交接柜：" + "1225" + "      柜门号：" + "1023");
+        btnFinish.setVisibility(View.INVISIBLE);
     }
 
     @OnClick({R.id.btn_back, R.id.btn_hand_do, R.id.btn_finish})

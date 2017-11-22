@@ -10,8 +10,8 @@ public class Drawer {
     private int column;
     private String department;
     private String userId;
-    private String state;//记录是否为空
-    private boolean isOpen = false;//记录是否打开
+    private String state;//是否为空;1为已使用 0为空（未使用）
+    private boolean isOpen = false;//是否打开
 
     public String getState() {
         return state;

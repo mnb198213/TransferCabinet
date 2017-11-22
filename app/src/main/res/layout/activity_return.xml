@@ -2,8 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/theme_background">
+    android:background="@color/theme_background"
+    android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -18,11 +18,11 @@
             android:layout_alignParentTop="true"
             android:layout_marginLeft="25dp"
             android:layout_marginTop="25dp"
+            android:background="@color/title_background"
             android:text="申领人存证"
             android:textColor="@color/title_text_color"
             android:textSize="@dimen/small_title_size"
-            android:textStyle="bold"
-            android:background="@color/title_background"/>
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btn_back"
@@ -30,12 +30,12 @@
             android:layout_height="@dimen/btn_height"
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
+            android:layout_marginBottom="5dp"
             android:layout_marginRight="100dp"
             android:background="@drawable/shape_btn_sure"
             android:text="返回"
-            android:textSize="@dimen/btn_text_size"
             android:textColor="@color/smart_text_color"
-            android:layout_marginBottom="5dp"/>
+            android:textSize="@dimen/btn_text_size" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -49,9 +49,9 @@
             android:id="@+id/btn_hand_do"
             android:layout_width="200dp"
             android:layout_height="@dimen/btn_height"
-            android:layout_alignParentEnd="true"
+            android:layout_centerInParent="true"
             android:background="@drawable/shape_btn_sure"
-            android:text="手动录入证件号"
+            android:text="录入证件号"
             android:textColor="@color/smart_text_color"
             android:textSize="@dimen/btn_text_size" />
     </RelativeLayout>
@@ -59,17 +59,18 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
         <TextView
             android:id="@+id/tv_time"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_alignParentBottom="true"
-            android:text="2017.10.26"
-            android:textSize="@dimen/time_text_size"
-            android:textColor="#C4C4C4"
-            android:gravity="end|center_vertical"
             android:background="#363636"
-            android:paddingRight="20dp" />
+            android:gravity="end|center_vertical"
+            android:paddingRight="20dp"
+            android:text="2017.10.26"
+            android:textColor="#C4C4C4"
+            android:textSize="@dimen/time_text_size" />
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -80,27 +81,27 @@
                 android:id="@+id/rv_examples"
                 android:layout_width="match_parent"
                 android:layout_height="80dp"
-                android:layout_margin="10dp"
-                android:layout_alignParentBottom="true"/>
+                android:layout_alignParentBottom="true"
+                android:layout_margin="10dp" />
 
             <Button
                 android:id="@+id/btn_finish"
                 android:layout_width="200dp"
                 android:layout_height="40dp"
-                android:layout_centerHorizontal="true"
                 android:layout_above="@id/rv_examples"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/shape_btn_sure"
+                android:gravity="center"
                 android:text="完成"
                 android:textColor="@color/smart_text_color"
-                android:textSize="@dimen/btn_text_size"
-                android:gravity="center"
-                android:background="@drawable/shape_btn_sure"/>
+                android:textSize="@dimen/btn_text_size" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/rv_paperwork"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_above="@id/btn_finish"
-                android:padding="10dp"/>
+                android:padding="10dp" />
         </RelativeLayout>
     </RelativeLayout>
 </LinearLayout>

@@ -2,8 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@drawable/shape_dialog_theme"
+    android:orientation="vertical"
     android:padding="10dp">
 
     <LinearLayout
@@ -12,10 +12,11 @@
         android:orientation="horizontal">
 
         <TextView
+            android:id="@+id/tv_info"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="证件号:"
+            android:text=":"
             android:textColor="@color/white"
             android:textSize="18sp" />
 
@@ -26,6 +27,7 @@
             android:layout_marginLeft="5dp"
             android:gravity="start|center_vertical"
             android:hint="请输入证件号"
+            android:text="192.168.0.14"
             android:textColor="@color/white"
             android:textSize="18sp" />
     </LinearLayout>

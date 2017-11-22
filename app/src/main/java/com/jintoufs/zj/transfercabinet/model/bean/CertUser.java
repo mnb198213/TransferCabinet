@@ -4,7 +4,7 @@ package com.jintoufs.zj.transfercabinet.model.bean;
  * Created by zj on 2017/11/9.
  */
 
-public class CUser {
+public class CertUser {
 //    {String userName,String idCard，String orgName}
     private String userName;
     private String idCard;

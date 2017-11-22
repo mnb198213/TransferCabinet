@@ -55,7 +55,7 @@ public class TCManageActivity extends BaseActivity {
     @BindView(R.id.tv_time)
     TextView tvTime;
     private Unbinder unbinder;
-    private boolean isLogin = true;
+    private boolean isLogin = false;
     private Intent mIntent;
     private Context mContext;
     private String username;
@@ -77,7 +77,7 @@ public class TCManageActivity extends BaseActivity {
             tvStatue.setText("张三  已登录");
         }
 
-        tvTime.setText("当前时间："+TimeUtil.DateToString(new Date()));
+        tvTime.setText("当前时间：" + TimeUtil.DateToString(new Date()));
     }
 
     @OnClick({R.id.tv_statue, R.id.btn_back, R.id.tv_take, R.id.tv_save, R.id.tv_monitor})
@@ -94,7 +94,7 @@ public class TCManageActivity extends BaseActivity {
             case R.id.tv_take:
                 if (!isLogin) {
                     showLoginDialog(AppConstant.ACTION_TAKE);
-                }else {
+                } else {
                     mIntent = new Intent(mContext, ManagerReceiveActivity.class);
                     startActivity(mIntent);
                 }
@@ -102,7 +102,7 @@ public class TCManageActivity extends BaseActivity {
             case R.id.tv_save:
                 if (!isLogin) {
                     showLoginDialog(AppConstant.ACTION_SAVE);
-                }else {
+                } else {
                     mIntent = new Intent(mContext, ManagerCastActivity.class);
                     startActivity(mIntent);
                 }
@@ -110,7 +110,7 @@ public class TCManageActivity extends BaseActivity {
             case R.id.tv_monitor:
                 if (!isLogin) {
                     showLoginDialog(AppConstant.ACTION_MONITOR);
-                }else {
+                } else {
                     mIntent = new Intent(mContext, CabinetMonitorActivity.class);
                     startActivity(mIntent);
                 }
@@ -134,25 +134,27 @@ public class TCManageActivity extends BaseActivity {
                 //用户名和密码
                 username = et_username.getText().toString().trim();
                 password = et_password.getText().toString().trim();
+                username = "1001";
+                password = "666666";
                 //库管员登录...
-                if (!TextUtils.isEmpty(username)&&!TextUtils.isEmpty(password)){
-                    Call<ResponseInfo<User>> call = NetService.getApiService().login(username,password);
+                if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password)) {
+                    Call<ResponseInfo<User>> call = NetService.getApiService().login(username, password);
                     call.enqueue(new Callback<ResponseInfo<User>>() {
                         @Override
                         public void onResponse(Call<ResponseInfo<User>> call, Response<ResponseInfo<User>> response) {
                             isLogin = true;
                             User user = response.body().getData();
                             dialog.dismiss();
-                            tvStatue.setText(user.getUserName()+"  已登录");
-                            if (action == AppConstant.ACTION_NOTHING){
-                                ToastUtils.showShortToast(mContext,"登录成功");
-                            }else if (action == AppConstant.ACTION_SAVE){
+                            tvStatue.setText(user.getUserName() + "  已登录");
+                            if (action == AppConstant.ACTION_NOTHING) {
+                                ToastUtils.showShortToast(mContext, "登录成功");
+                            } else if (action == AppConstant.ACTION_SAVE) {
                                 mIntent = new Intent(mContext, ManagerCastActivity.class);
                                 startActivity(mIntent);
-                            }else if (action == AppConstant.ACTION_TAKE){
+                            } else if (action == AppConstant.ACTION_TAKE) {
                                 mIntent = new Intent(mContext, ManagerReceiveActivity.class);
                                 startActivity(mIntent);
-                            }else if (action == AppConstant.ACTION_MONITOR){
+                            } else if (action == AppConstant.ACTION_MONITOR) {
                                 mIntent = new Intent(mContext, CabinetMonitorActivity.class);
                                 startActivity(mIntent);
                             }
@@ -161,11 +163,11 @@ public class TCManageActivity extends BaseActivity {
                         @Override
                         public void onFailure(Call<ResponseInfo<User>> call, Throwable t) {
 //                            Log.i(TAG,);
-                            Logger.i("url:"+call.request().url()+"  error:"+t.getMessage());
+                            Logger.i("url:" + call.request().url() + "  error:" + t.getMessage());
                         }
                     });
-                }else {
-                    ToastUtils.showShortToast(mContext,"用户名或密码不能为空");
+                } else {
+                    ToastUtils.showShortToast(mContext, "用户名或密码不能为空");
                 }
             }
         });

@@ -29,12 +29,13 @@ public class DrawerAdapter extends RecyclerView.Adapter<DrawerAdapter.DrawHolder
         clearSelected();
     }
 
-    public void clearSelected(){
+    public void clearSelected() {
         isSelected.clear();
         for (int i = 0; i < drawerList.size(); i++) {
             isSelected.add(false);
         }
     }
+
     @Override
     public DrawHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new DrawHolder(View.inflate(mContext, R.layout.item_draw_viewer, null));
@@ -58,6 +59,7 @@ public class DrawerAdapter extends RecyclerView.Adapter<DrawerAdapter.DrawHolder
             holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.selected_color));
         } else if (statue.equals("1") && !isSelected.get(position) && !drawer.isOpen()) {//已使用的柜子,未选中，未打开
             holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.saved_color));
+            holder.tv_name.setText(drawer.getName());
         } else if (statue.equals("1") && isSelected.get(position) && !drawer.isOpen()) {//已使用的柜子,已选中，未打开
             holder.tv_name.setText(drawer.getName());
             holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.selected_color));

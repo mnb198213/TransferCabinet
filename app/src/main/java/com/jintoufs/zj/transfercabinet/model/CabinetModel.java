@@ -10,11 +10,15 @@ import java.net.Socket;
  */
 
 public class CabinetModel {
-    public static final String CABINET_IP = "192.168.0.14";
+    public String cabinet_ip;
     public static final int PORT = 5000;
 
     private static OutputStream os;
     private static InputStream is;
+
+    public CabinetModel(String cabinetIP) {
+        this.cabinet_ip = cabinetIP;
+    }
 
     /**
      * 向柜子发送信息
@@ -24,10 +28,10 @@ public class CabinetModel {
      * @return
      * @throws Exception
      */
-    private static String sendDataToCabinet(Socket socket, byte[] buf) throws Exception {
+    private String sendDataToCabinet(Socket socket, byte[] buf) throws Exception {
         String backInfo = null;
         if (socket == null) {
-            socket = new Socket(CABINET_IP, PORT);
+            socket = new Socket(cabinet_ip, PORT);
         }
         if (socket.isConnected()) {
             os = socket.getOutputStream();
@@ -54,7 +58,7 @@ public class CabinetModel {
      * @param row
      * @param column
      */
-    public static String openDrawer(Socket socket, String row, String column) throws Exception {
+    public String openDrawer(Socket socket, String row, String column) throws Exception {
         int intRow = new Integer(row).intValue();
         int intColumn = new Integer(column).intValue();
         String strHex = Integer.toHexString(intRow);
@@ -73,7 +77,7 @@ public class CabinetModel {
      * @param row
      * @param column
      */
-    public static String closeDrawer(Socket socket, String row, String column) throws Exception {
+    public String closeDrawer(Socket socket, String row, String column) throws Exception {
         int intRow = new Integer(row).intValue();
         int intColumn = new Integer(column).intValue();
         String strHex = Integer.toHexString(intRow);
@@ -95,7 +99,7 @@ public class CabinetModel {
      * @return
      * @throws Exception
      */
-    public static String testDrawer(Socket socket, String row, String column) throws Exception {
+    public String testDrawer(Socket socket, String row, String column) throws Exception {
         int intRow = new Integer(row).intValue();
         int intColumn = new Integer(column).intValue();
         String strHex = Integer.toHexString(intRow);
@@ -108,7 +112,7 @@ public class CabinetModel {
         return sendDataToCabinet(socket, buf);
     }
 
-    public static boolean isOpen(Socket socket, String row, String column) throws Exception {
+    public boolean isOpen(Socket socket, String row, String column) throws Exception {
         int intRow = new Integer(row).intValue();
         int intColumn = new Integer(column).intValue();
         String strHex = Integer.toHexString(intRow);
@@ -137,7 +141,7 @@ public class CabinetModel {
      * @param socket
      * @throws IOException
      */
-    public static void closeConnection(Socket socket) throws IOException {
+    public void closeConnection(Socket socket) throws IOException {
         if (os != null) {
             os.close();
         }

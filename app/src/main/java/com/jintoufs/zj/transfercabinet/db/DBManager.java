@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import org.greenrobot.greendao.query.QueryBuilder;
+
 import java.util.List;
 
 /**
@@ -124,11 +125,26 @@ public class DBManager {
      * @param cabinetNumber
      * @return
      */
-    public List<CabinetInfo> querySingleCabinet(String cabinetNumber) {
+    public CabinetInfo querySingleCabinet(String cabinetNumber) {
         QueryBuilder<CabinetInfo> queryBuilder = getReadCabinetInfoDao().queryBuilder();
         queryBuilder.where(CabinetInfoDao.Properties.CabinetNumber.eq(cabinetNumber));
         List<CabinetInfo> cabinetInfoList = queryBuilder.list();
-        return cabinetInfoList;
+        if (cabinetInfoList != null && cabinetInfoList.size() == 1)
+            return cabinetInfoList.get(0);
+        else return null;
+    }
+
+    /**
+     * 查询到所有空箱子列表中的第一个空箱子
+     * @return
+     */
+    public CabinetInfo queryEmptyCabinet() {
+        QueryBuilder<CabinetInfo> queryBuilder = getReadCabinetInfoDao().queryBuilder();
+        queryBuilder.and(CabinetInfoDao.Properties.PaperworkId.eq(null), CabinetInfoDao.Properties.UserId.eq(null));
+        List<CabinetInfo> cabinetInfoList = queryBuilder.list();
+        if (cabinetInfoList != null && cabinetInfoList.size() > 0)
+            return cabinetInfoList.get(0);
+        else return null;
     }
 
 }

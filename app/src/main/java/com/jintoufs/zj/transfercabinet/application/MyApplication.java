@@ -2,6 +2,7 @@ package com.jintoufs.zj.transfercabinet.application;
 
 import android.app.Application;
 
+import com.jintoufs.zj.transfercabinet.net.NetService;
 import com.jintoufs.zj.transfercabinet.port.SerialPort;
 import com.jintoufs.zj.transfercabinet.port.SerialPortFinder;
 import com.orhanobut.logger.AndroidLogAdapter;
@@ -34,6 +35,7 @@ public class MyApplication extends Application {
                 .tag("zoujiang")   // (Optional) Global tag for every log. Default PRETTY_LOGGER
                 .build();
         Logger.addLogAdapter(new AndroidLogAdapter(formatStrategy));
+
     }
 
     public SerialPort getSerialPort() throws SecurityException, IOException, InvalidParameterException {

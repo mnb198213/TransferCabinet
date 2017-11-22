@@ -2,18 +2,15 @@ package com.jintoufs.zj.transfercabinet.activity;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.basekit.base.BaseActivity;
@@ -21,17 +18,15 @@ import com.basekit.util.ToastUtils;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.adapter.ExampleImgAdapetr;
 import com.jintoufs.zj.transfercabinet.adapter.PaperworkAdapter;
-import com.jintoufs.zj.transfercabinet.model.bean.CUser;
 import com.jintoufs.zj.transfercabinet.model.bean.CertificateVo;
-import com.jintoufs.zj.transfercabinet.model.bean.Paperwork;
 import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
 import com.jintoufs.zj.transfercabinet.net.NetService;
 import com.jintoufs.zj.transfercabinet.util.DensityUtil;
 import com.jintoufs.zj.transfercabinet.util.TimeUtil;
 import com.jintoufs.zj.transfercabinet.widget.SpaceItemLeftDecoration;
 import com.jintoufs.zj.transfercabinet.widget.SpaceItemTopDecoration;
+import com.orhanobut.logger.Logger;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -90,6 +85,7 @@ public class UserReturnActivity extends BaseActivity {
         super.initData();
         mContext = this;
         paperworkList = new ArrayList<>();
+
         paperworkAdapter = new PaperworkAdapter(this, paperworkList);
 
         exampleImgAdapetr = new ExampleImgAdapetr(this, imgs);
@@ -106,7 +102,7 @@ public class UserReturnActivity extends BaseActivity {
         rvExamples.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         rvExamples.addItemDecoration(new SpaceItemLeftDecoration(DensityUtil.dip2px(this, 10)));
         rvExamples.setAdapter(exampleImgAdapetr);
-
+        btnFinish.setVisibility(View.INVISIBLE);
         new TimeThread().start();
     }
 
@@ -117,7 +113,7 @@ public class UserReturnActivity extends BaseActivity {
                 finish();
                 break;
             case R.id.btn_hand_do:
-                showInputPaperworkId();
+                showInputPaperworkId("证件号：");
                 break;
             case R.id.btn_finish:
                 ToastUtils.showShortToast(mContext, "存证完成");
@@ -125,11 +121,11 @@ public class UserReturnActivity extends BaseActivity {
         }
     }
 
-    private void showInputPaperworkId() {
+    private void showInputPaperworkId(String info) {
         final Dialog dialog = new Dialog(this, R.style.TransparentDialogStyle);
         dialog.setCanceledOnTouchOutside(false);
         Window window = dialog.getWindow();
-        View view = View.inflate(mContext, R.layout.dialog_input_view,null);
+        View view = View.inflate(mContext, R.layout.dialog_input_view, null);
         final EditText et_input = (EditText) view.findViewById(R.id.et_input);
         Button btn_back = (Button) view.findViewById(R.id.btn_back);
         btn_back.setOnClickListener(new View.OnClickListener() {
@@ -139,6 +135,8 @@ public class UserReturnActivity extends BaseActivity {
             }
         });
         Button btn_sure = (Button) view.findViewById(R.id.btn_sure);
+        TextView tv_info = (TextView) view.findViewById(R.id.tv_info);
+        tv_info.setText(info);
         btn_sure.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -152,15 +150,27 @@ public class UserReturnActivity extends BaseActivity {
                     @Override
                     public void onResponse(Call<ResponseInfo<CertificateVo>> call, Response<ResponseInfo<CertificateVo>> response) {
                         if (response.body() != null) {
-                            CertificateVo certificateVo = response.body().getData();
-                            paperworkList.add(certificateVo);
-                            paperworkAdapter.notifyDataSetChanged();
+                            ResponseInfo<CertificateVo> responseInfo = response.body();
+                            if ("200".equals(responseInfo.getCode())) {
+                                CertificateVo certificateVo = response.body().getData();
+                                if (certificateVo != null) {
+                                    Logger.i("certificateVo != null");
+                                    paperworkList.add(certificateVo);
+                                    paperworkAdapter.notifyDataSetChanged();
+                                } else {
+                                    Logger.i("certificateVo == null");
+                                }
+                            } else {
+                                Logger.i("请求码：" + responseInfo.getCode() + responseInfo.getMsg());
+                            }
+                        } else {
+                            Logger.i("response.body() == null");
                         }
                     }
 
                     @Override
                     public void onFailure(Call<ResponseInfo<CertificateVo>> call, Throwable t) {
-                        ToastUtils.showShortToast(mContext, t.getMessage());
+                        Logger.i("url:" + call.request().url() + "  error:" + t.getMessage());
                     }
                 });
             }

@@ -15,8 +15,13 @@ import com.basekit.base.BaseActivity;
 import com.basekit.util.ToastUtils;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.adapter.DrawerAdapter;
+import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
+import com.jintoufs.zj.transfercabinet.db.DBManager;
+import com.jintoufs.zj.transfercabinet.model.CabinetInfoBeanModel;
+import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfoBean;
 import com.jintoufs.zj.transfercabinet.model.bean.Drawer;
 import com.jintoufs.zj.transfercabinet.util.DensityUtil;
+import com.jintoufs.zj.transfercabinet.util.SharedPreferencesHelper;
 import com.jintoufs.zj.transfercabinet.widget.SpaceDrawerItemDecoration;
 import com.orhanobut.logger.Logger;
 
@@ -51,24 +56,41 @@ public class CabinetMonitorActivity extends BaseActivity {
 
     private Unbinder unbinder;
     private DrawerAdapter drawerAdapter;
-    private int raw = 12;
-    private int column = 5;
+    private int raw;
+    private int column;
     private Context mContext;
     private List<Drawer> drawerList;
     private Drawer drawer;
 
     private boolean isAllOpen = false;//判断是否全部打开
+    private DBManager dbManager;
+    private CabinetInfoBeanModel cabinetInfoBeanModel;
 
     @Override
     public void initData() {
         mContext = this;
+        dbManager = DBManager.getInstance(mContext);
+        cabinetInfoBeanModel = new CabinetInfoBeanModel(mContext);
+        List<CabinetInfo> cabinetInfoList = dbManager.queryAllCabinetInfos();
+        CabinetInfoBean cabinetInfoBean = cabinetInfoBeanModel.getCabinetInfoBean();
+        raw = Integer.valueOf(cabinetInfoBean.getRow());
+        column = Integer.valueOf(cabinetInfoBean.getCol());
+
         drawerList = new ArrayList<>();
-        for (int i = 0; i < raw * column; i++) {
+        for (int i = 0; i < cabinetInfoList.size(); i++) {
             Drawer drawer = new Drawer();
             drawer.setRaw(i / column + 1);
             drawer.setColumn(i % column);
-            if (i % 3 == 0) {
+            CabinetInfo cabinetInfo = cabinetInfoList.get(i);
+            if (cabinetInfo.getPaperworkId() == null && cabinetInfo.getUserId() == null){
+                drawer.setState("0");
+            }else {
                 drawer.setState("1");
+            }
+            ////////////////////////////////////////////////////
+            drawer.setName(cabinetInfo.getUserId());
+            if (i % 3 == 0) {
+
                 drawer.setName("用户" + i);
                 drawer.setDepartment("成都第" + i + "支行");
                 drawer.setUserId(i + "2" + i + "5" + i + "125" + i + "2");

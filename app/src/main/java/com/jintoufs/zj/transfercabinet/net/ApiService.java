@@ -1,6 +1,6 @@
 package com.jintoufs.zj.transfercabinet.net;
 
-import com.jintoufs.zj.transfercabinet.model.bean.CUser;
+import com.jintoufs.zj.transfercabinet.model.bean.CertUser;
 import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfoBean;
 import com.jintoufs.zj.transfercabinet.model.bean.CertificateVo;
 import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
@@ -35,7 +35,7 @@ public interface ApiService {
      * @return
      */
     @GET("api/common/getCUserById")
-    Call<ResponseInfo<CUser>> getCUserById(@Query("cUserId") String cUserId);
+    Call<ResponseInfo<CertUser>> getCUserById(@Query("certUserId") String cUserId);
 
     /**
      * 根据证件号查询证件详情
@@ -43,7 +43,7 @@ public interface ApiService {
      * @param number
      * @return
      */
-    @GET("/api/common/getCertificateByNumber")
+    @GET("api/common/getCertificateByNumber")
     Call<ResponseInfo<CertificateVo>> getCertificateByNumber(@Query("number") String number);
 
     /**
@@ -52,7 +52,7 @@ public interface ApiService {
      * @param msgCode
      * @return
      */
-    @GET("/api/transferCabinet/validateMessageCode")
+    @GET("api/transferCabinet/validateMessageCode")
     Call<ResponseInfo<String>> validateMessageCode(@Query("msgCode") String msgCode);
 
     /**
@@ -63,7 +63,7 @@ public interface ApiService {
      * @return
      */
     @FormUrlEncoded
-    @POST("/api/transferCabinet/tccOutSubmit")
+    @POST("api/transferCabinet/tccOutSubmit")
     Call<ResponseInfo<String>> tccOutSubmit(@Field("certificateOpVoList") String certificateOpVoList,
                                             @Field("userId") String userId);
 
@@ -75,7 +75,7 @@ public interface ApiService {
      * @return
      */
     @FormUrlEncoded
-    @POST("/api/transferCabinet/tccInSubmit")
+    @POST("api/transferCabinet/tccInSubmit")
     Call<ResponseInfo<String>> tccInSubmit(@Field("certificateOpVoList") String certificateOpVoList,
                                            @Field("userId") String userId);
 
@@ -85,7 +85,7 @@ public interface ApiService {
      * @param ipAddress
      * @return
      */
-    @GET("/api/transferCabinet/getTransferCabinetByIp")
+    @GET("api/transferCabinet/getTransferCabinetByIp")
     Call<ResponseInfo<CabinetInfoBean>> getTransferCabinetByIp(@Query("ipAddress") String ipAddress);
 
     /**
@@ -98,7 +98,7 @@ public interface ApiService {
      * @return
      */
     @FormUrlEncoded
-    @POST("/api/transferCabinet/tccMaintainSubmit")
+    @POST("api/transferCabinet/tccMaintainSubmit")
     Call<ResponseInfo<String>> tccMaintainSubmit(@Field("userId") String userId,
                                                  @Field("opType") String opType,
                                                  @Field("cabinetSerialNo") String cabinetSerialNo,

@@ -20,6 +20,9 @@ import com.jintoufs.zj.transfercabinet.db.DBManager;
 import com.jintoufs.zj.transfercabinet.model.CabinetInfoBeanModel;
 import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfoBean;
 import com.jintoufs.zj.transfercabinet.model.bean.Drawer;
+import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
+import com.jintoufs.zj.transfercabinet.model.bean.User;
+import com.jintoufs.zj.transfercabinet.net.NetService;
 import com.jintoufs.zj.transfercabinet.util.DensityUtil;
 import com.jintoufs.zj.transfercabinet.util.SharedPreferencesHelper;
 import com.jintoufs.zj.transfercabinet.widget.SpaceDrawerItemDecoration;
@@ -32,6 +35,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * 柜门监控
@@ -65,10 +71,15 @@ public class CabinetMonitorActivity extends BaseActivity {
     private boolean isAllOpen = false;//判断是否全部打开
     private DBManager dbManager;
     private CabinetInfoBeanModel cabinetInfoBeanModel;
+    private User user;//库管员
+    private SharedPreferencesHelper sharedPreferencesHelper;
+    private String serialNo;
 
     @Override
     public void initData() {
         mContext = this;
+        sharedPreferencesHelper = new SharedPreferencesHelper(this);
+        user = getIntent().getParcelableExtra("User");
         dbManager = DBManager.getInstance(mContext);
         cabinetInfoBeanModel = new CabinetInfoBeanModel(mContext);
         List<CabinetInfo> cabinetInfoList = dbManager.queryAllCabinetInfos();
@@ -80,26 +91,21 @@ public class CabinetMonitorActivity extends BaseActivity {
         for (int i = 0; i < cabinetInfoList.size(); i++) {
             Drawer drawer = new Drawer();
             drawer.setRaw(i / column + 1);
-            drawer.setColumn(i % column);
+            drawer.setColumn(i % column+1);
             CabinetInfo cabinetInfo = cabinetInfoList.get(i);
-            if (cabinetInfo.getPaperworkId() == null && cabinetInfo.getUserId() == null){
+            if (cabinetInfo.getPaperworkId().equals("0") && cabinetInfo.getUserIdCard().equals("0")) {
                 drawer.setState("0");
-            }else {
+            } else {
                 drawer.setState("1");
             }
-            ////////////////////////////////////////////////////
-            drawer.setName(cabinetInfo.getUserId());
-            if (i % 3 == 0) {
-
-                drawer.setName("用户" + i);
-                drawer.setDepartment("成都第" + i + "支行");
-                drawer.setUserId(i + "2" + i + "5" + i + "125" + i + "2");
-            } else {
-                drawer.setState("0");
-            }
+            drawer.setName(cabinetInfo.getUsername());
+            drawer.setUserId(cabinetInfo.getUserIdCard());
+            drawer.setDepartment(cabinetInfo.getDepartment());
+            drawer.setOpen(false);
             drawerList.add(drawer);
         }
         drawerAdapter = new DrawerAdapter(mContext, drawerList);
+        serialNo = (String) sharedPreferencesHelper.get("SerialNo", null);
     }
 
     @Override
@@ -109,6 +115,11 @@ public class CabinetMonitorActivity extends BaseActivity {
         tvPaperworkUser.setText("姓名：" + "null" +
                 "\n\n所属机构：" + "null" +
                 "\n\n" + "身份证号：" + "null");
+        if (user != null) {
+            tvStatue.setText(user.getUserName() + " 已登录");
+        } else {
+            tvStatue.setText("管理员信息加载失败");
+        }
 
         drawerAdapter.setOnItemDrawerClickListener(new DrawerAdapter.OnItemDrawerClickListener() {
             @Override
@@ -135,6 +146,8 @@ public class CabinetMonitorActivity extends BaseActivity {
             btnOpenAll.setText("关闭所有柜子");
         }
         btnOpenSingle.setText("打开单个柜子");
+
+
     }
 
     @OnClick({R.id.tv_statue, R.id.btn_back, R.id.btn_open_single, R.id.btn_open_all})
@@ -143,6 +156,12 @@ public class CabinetMonitorActivity extends BaseActivity {
             case R.id.tv_statue:
                 break;
             case R.id.btn_back:
+                for (int i = 0; i < drawerList.size(); i++) {
+                    if (drawerList.get(i).isOpen()) {
+                        ToastUtils.showShortToast(mContext, "请确保所有箱子都已关闭");
+                        return;
+                    }
+                }
                 finish();
                 break;
             case R.id.btn_open_single:
@@ -150,10 +169,45 @@ public class CabinetMonitorActivity extends BaseActivity {
                     ToastUtils.showShortToast(mContext, "未选中抽屉");
                     return;
                 }
-                if (drawer.isOpen()) {
+                if (drawer.isOpen()) {//已打开
+
+                    //关闭柜子操作
+                    //、、、、、、、、、、、、、
+
                     btnOpenSingle.setText("打开当前柜子");
                     drawer.setOpen(false);
                 } else {
+
+                    //打开柜子操作
+                    //、、、、、、、、、、、
+                    if (serialNo == null) {
+                        ToastUtils.showShortToast(mContext, "柜子编号获取失败！");
+                        return;
+                    }
+                    String row = String.valueOf(drawer.getRaw());
+                    if (row.length() == 1) {
+                        row = "0" + row;
+                    }
+                    String col = String.valueOf(drawer.getColumn());
+                    if (col.length() == 1) {
+                        col = "0" + col;
+                    }
+                    Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(), "1", serialNo, row + col);
+                    call.enqueue(new Callback<ResponseInfo<String>>() {
+                        @Override
+                        public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
+                            if ("200".equals(response.body().getCode())) {
+                                Logger.i("提交成功");
+                            } else {
+                                Logger.i("提交失败");
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
+                            Logger.i("异常：" + t.getMessage());
+                        }
+                    });
                     btnOpenSingle.setText("关闭当前柜子");
                     drawer.setOpen(true);
                 }
@@ -185,12 +239,28 @@ public class CabinetMonitorActivity extends BaseActivity {
                 dialog.dismiss();
             }
         });
-
         tv_try_again.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (!isAllOpen) {
-                    //打开所有柜门
+                    //打开所有柜门操作
+                    //、、、、、、、、、、、、、
+                    Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(), "2", serialNo,null);
+                    call.enqueue(new Callback<ResponseInfo<String>>() {
+                        @Override
+                        public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
+                            if ("200".equals(response.body().getCode())) {
+                                Logger.i("提交成功");
+                            } else {
+                                Logger.i("提交失败");
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
+                            Logger.i("异常：" + t.getMessage());
+                        }
+                    });
                     for (Drawer drawer : drawerList) {
                         drawer.setOpen(true);
                     }

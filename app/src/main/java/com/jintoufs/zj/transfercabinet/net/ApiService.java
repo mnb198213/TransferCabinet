@@ -19,7 +19,7 @@ import retrofit2.http.Query;
 
 public interface ApiService {
     /**
-     * 用户登录
+     * 库管员（超级管理员）用户登录
      *
      * @param username
      * @param password
@@ -92,7 +92,7 @@ public interface ApiService {
      * 交接柜维护
      *
      * @param userId
-     * @param opType
+     * @param opType 单开 1 ； 全开 2 ；
      * @param cabinetSerialNo
      * @param locationCode
      * @return

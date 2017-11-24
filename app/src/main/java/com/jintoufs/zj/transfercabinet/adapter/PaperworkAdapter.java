@@ -1,6 +1,7 @@
 package com.jintoufs.zj.transfercabinet.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import com.bumptech.glide.MemoryCategory;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.model.bean.CertificateVo;
 import com.jintoufs.zj.transfercabinet.model.bean.Paperwork;
+import com.jintoufs.zj.transfercabinet.util.Base64Util;
 
 import java.util.List;
 
@@ -38,9 +40,15 @@ public class PaperworkAdapter extends RecyclerView.Adapter<PaperworkAdapter.PWHo
         CertificateVo paperwork = paperworkList.get(position);
         holder.tv_context.setText("姓名：" + paperwork.getUserName() + "      性别：" + paperwork.getSex() + "      出生日期：" + paperwork.getBornDate() +
                 "      民族：" + paperwork.getNation() + "\n身份证号：" + paperwork.getIdCard() + "      联系电话：" + paperwork.getPhone() +
-                "\n证件类型：" + paperwork.getTypeName() + "      证件号：" + paperwork.getNumber() +
-                "\n所属机构：" + paperwork.getOrgName() + "      物理序号：" + paperwork.getPhySerialNum());
-        Glide.with(mContext).load(paperwork.getImage()).centerCrop().placeholder(R.mipmap.empty_img).into(holder.image);
+                "\n证件类型：" + paperwork.getType() + "      证件号：" + paperwork.getNumber() +
+                "\n所属机构：" + paperwork.getOrgName());
+        Bitmap bitmap = Base64Util.stringtoBitmap(paperwork.getImage());
+        if (bitmap != null){
+            holder.image.setImageBitmap(bitmap);
+        }else {
+            holder.image.setImageResource(R.mipmap.empty_img);
+        }
+//        Glide.with(mContext).load(bitmap).centerCrop().placeholder(R.mipmap.empty_img).into(holder.image);
     }
 
     @Override

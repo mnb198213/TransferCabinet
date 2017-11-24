@@ -23,10 +23,12 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
     */
     public static class Properties {
         public final static Property Id = new Property(0, Long.class, "id", true, "_id");
-        public final static Property UserId = new Property(1, String.class, "userId", false, "USERID");
-        public final static Property CabinetNumber = new Property(2, String.class, "cabinetNumber", false, "CABINETNUMBER");
-        public final static Property PaperworkId = new Property(3, String.class, "paperworkId", false, "PAPERWORKID");
-        public final static Property Statue = new Property(4, int.class, "statue", false, "STATUE");
+        public final static Property UserIdCard = new Property(1, String.class, "userIdCard", false, "USERIDCARD");
+        public final static Property Username = new Property(2, String.class, "username", false, "USERNAME");
+        public final static Property Department = new Property(3, String.class, "department", false, "DEPARTMENT");
+        public final static Property CabinetNumber = new Property(4, String.class, "cabinetNumber", false, "CABINETNUMBER");
+        public final static Property PaperworkId = new Property(5, String.class, "paperworkId", false, "PAPERWORKID");
+        public final static Property Type = new Property(6, String.class, "type", false, "TYPE");
     };
 
 
@@ -43,10 +45,12 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
         String constraint = ifNotExists? "IF NOT EXISTS ": "";
         db.execSQL("CREATE TABLE " + constraint + "\"CABINET_INFO\" (" + //
                 "\"_id\" INTEGER PRIMARY KEY ," + // 0: id
-                "\"USERID\" TEXT," + // 1: userId
-                "\"CABINETNUMBER\" TEXT," + // 2: cabinetNumber
-                "\"PAPERWORKID\" TEXT," + // 3: paperworkId
-                "\"STATUE\" INTEGER NOT NULL );"); // 4: statue
+                "\"USERIDCARD\" TEXT," + // 1: userIdCard
+                "\"USERNAME\" TEXT," + // 2: username
+                "\"DEPARTMENT\" TEXT," + // 3: department
+                "\"CABINETNUMBER\" TEXT," + // 4: cabinetNumber
+                "\"PAPERWORKID\" TEXT," + // 5: paperworkId
+                "\"TYPE\" TEXT);"); // 6: type
     }
 
     /** Drops the underlying database table. */
@@ -64,21 +68,35 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
             stmt.bindLong(1, id);
         }
  
-        String userId = entity.getUserId();
-        if (userId != null) {
-            stmt.bindString(2, userId);
+        String userIdCard = entity.getUserIdCard();
+        if (userIdCard != null) {
+            stmt.bindString(2, userIdCard);
+        }
+ 
+        String username = entity.getUsername();
+        if (username != null) {
+            stmt.bindString(3, username);
+        }
+ 
+        String department = entity.getDepartment();
+        if (department != null) {
+            stmt.bindString(4, department);
         }
  
         String cabinetNumber = entity.getCabinetNumber();
         if (cabinetNumber != null) {
-            stmt.bindString(3, cabinetNumber);
+            stmt.bindString(5, cabinetNumber);
         }
  
         String paperworkId = entity.getPaperworkId();
         if (paperworkId != null) {
-            stmt.bindString(4, paperworkId);
+            stmt.bindString(6, paperworkId);
         }
-        stmt.bindLong(5, entity.getStatue());
+ 
+        String type = entity.getType();
+        if (type != null) {
+            stmt.bindString(7, type);
+        }
     }
 
     @Override
@@ -90,21 +108,35 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
             stmt.bindLong(1, id);
         }
  
-        String userId = entity.getUserId();
-        if (userId != null) {
-            stmt.bindString(2, userId);
+        String userIdCard = entity.getUserIdCard();
+        if (userIdCard != null) {
+            stmt.bindString(2, userIdCard);
+        }
+ 
+        String username = entity.getUsername();
+        if (username != null) {
+            stmt.bindString(3, username);
+        }
+ 
+        String department = entity.getDepartment();
+        if (department != null) {
+            stmt.bindString(4, department);
         }
  
         String cabinetNumber = entity.getCabinetNumber();
         if (cabinetNumber != null) {
-            stmt.bindString(3, cabinetNumber);
+            stmt.bindString(5, cabinetNumber);
         }
  
         String paperworkId = entity.getPaperworkId();
         if (paperworkId != null) {
-            stmt.bindString(4, paperworkId);
+            stmt.bindString(6, paperworkId);
         }
-        stmt.bindLong(5, entity.getStatue());
+ 
+        String type = entity.getType();
+        if (type != null) {
+            stmt.bindString(7, type);
+        }
     }
 
     @Override
@@ -116,10 +148,12 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
     public CabinetInfo readEntity(Cursor cursor, int offset) {
         CabinetInfo entity = new CabinetInfo( //
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // id
-            cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // userId
-            cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // cabinetNumber
-            cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // paperworkId
-            cursor.getInt(offset + 4) // statue
+            cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // userIdCard
+            cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // username
+            cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // department
+            cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // cabinetNumber
+            cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5), // paperworkId
+            cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6) // type
         );
         return entity;
     }
@@ -127,10 +161,12 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
     @Override
     public void readEntity(Cursor cursor, CabinetInfo entity, int offset) {
         entity.setId(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
-        entity.setUserId(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
-        entity.setCabinetNumber(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
-        entity.setPaperworkId(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
-        entity.setStatue(cursor.getInt(offset + 4));
+        entity.setUserIdCard(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
+        entity.setUsername(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
+        entity.setDepartment(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
+        entity.setCabinetNumber(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
+        entity.setPaperworkId(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
+        entity.setType(cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6));
      }
     
     @Override

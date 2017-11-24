@@ -55,11 +55,11 @@ public class TCManageActivity extends BaseActivity {
     @BindView(R.id.tv_time)
     TextView tvTime;
     private Unbinder unbinder;
-    private boolean isLogin = false;
     private Intent mIntent;
     private Context mContext;
     private String username;
     private String password;
+    private User user;
 
     @Override
     public void initData() {
@@ -71,12 +71,7 @@ public class TCManageActivity extends BaseActivity {
     public void initView() {
         setContentView(R.layout.activity_tcmanage);
         unbinder = ButterKnife.bind(this);
-        if (!isLogin) {
-            tvStatue.setText("未登录");
-        } else {
-            tvStatue.setText("张三  已登录");
-        }
-
+        tvStatue.setText("未登录");
         tvTime.setText("当前时间：" + TimeUtil.DateToString(new Date()));
     }
 
@@ -84,7 +79,7 @@ public class TCManageActivity extends BaseActivity {
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.tv_statue:
-                if (!isLogin) {
+                if (user == null) {
                     showLoginDialog(AppConstant.ACTION_NOTHING);
                 }
                 break;
@@ -92,29 +87,31 @@ public class TCManageActivity extends BaseActivity {
                 finish();
                 break;
             case R.id.tv_take:
-                if (!isLogin) {
+                if (user == null) {
                     showLoginDialog(AppConstant.ACTION_TAKE);
                 } else {
                     mIntent = new Intent(mContext, ManagerReceiveActivity.class);
+                    mIntent.putExtra("User", user);
                     startActivity(mIntent);
                 }
                 break;
             case R.id.tv_save:
-                if (!isLogin) {
+                if (user == null) {
                     showLoginDialog(AppConstant.ACTION_SAVE);
                 } else {
                     mIntent = new Intent(mContext, ManagerCastActivity.class);
+                    mIntent.putExtra("User", user);
                     startActivity(mIntent);
                 }
                 break;
             case R.id.tv_monitor:
-                if (!isLogin) {
+                if (user == null) {
                     showLoginDialog(AppConstant.ACTION_MONITOR);
                 } else {
                     mIntent = new Intent(mContext, CabinetMonitorActivity.class);
+                    mIntent.putExtra("User", user);
                     startActivity(mIntent);
                 }
-
                 break;
         }
     }
@@ -142,20 +139,22 @@ public class TCManageActivity extends BaseActivity {
                     call.enqueue(new Callback<ResponseInfo<User>>() {
                         @Override
                         public void onResponse(Call<ResponseInfo<User>> call, Response<ResponseInfo<User>> response) {
-                            isLogin = true;
-                            User user = response.body().getData();
+                            user = response.body().getData();
                             dialog.dismiss();
                             tvStatue.setText(user.getUserName() + "  已登录");
                             if (action == AppConstant.ACTION_NOTHING) {
                                 ToastUtils.showShortToast(mContext, "登录成功");
                             } else if (action == AppConstant.ACTION_SAVE) {
                                 mIntent = new Intent(mContext, ManagerCastActivity.class);
+                                mIntent.putExtra("User", user);
                                 startActivity(mIntent);
                             } else if (action == AppConstant.ACTION_TAKE) {
                                 mIntent = new Intent(mContext, ManagerReceiveActivity.class);
+                                mIntent.putExtra("User", user);
                                 startActivity(mIntent);
                             } else if (action == AppConstant.ACTION_MONITOR) {
                                 mIntent = new Intent(mContext, CabinetMonitorActivity.class);
+                                mIntent.putExtra("User", user);
                                 startActivity(mIntent);
                             }
                         }

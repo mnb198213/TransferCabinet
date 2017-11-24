@@ -63,7 +63,7 @@ public class DBManager {
     }
 
     /**
-     * 插入一条数据
+     * 插入一条柜子信息数据
      *
      * @param cabinetInfo
      */
@@ -84,7 +84,7 @@ public class DBManager {
     }
 
     /**
-     * 删除一条数据
+     * 删除一条柜子信息数据
      *
      * @param cabinetInfo
      */
@@ -115,7 +115,7 @@ public class DBManager {
      */
     public List<CabinetInfo> queryAllCabinetInfos() {
         QueryBuilder<CabinetInfo> queryBuilder = getReadCabinetInfoDao().queryBuilder();
-        List<CabinetInfo> cabinetInfoList = queryBuilder.list();
+        List<CabinetInfo> cabinetInfoList = queryBuilder.build().list();
         return cabinetInfoList;
     }
 
@@ -136,15 +136,38 @@ public class DBManager {
 
     /**
      * 查询到所有空箱子列表中的第一个空箱子
+     *
      * @return
      */
     public CabinetInfo queryEmptyCabinet() {
-        QueryBuilder<CabinetInfo> queryBuilder = getReadCabinetInfoDao().queryBuilder();
-        queryBuilder.and(CabinetInfoDao.Properties.PaperworkId.eq(null), CabinetInfoDao.Properties.UserId.eq(null));
-        List<CabinetInfo> cabinetInfoList = queryBuilder.list();
+        List<CabinetInfo> cabinetInfoList = queryAllEmptyCabinet();
         if (cabinetInfoList != null && cabinetInfoList.size() > 0)
             return cabinetInfoList.get(0);
         else return null;
+    }
+
+    /**
+     * 查询到所有空的柜子
+     *
+     * @return
+     */
+    public List<CabinetInfo> queryAllEmptyCabinet() {
+        QueryBuilder<CabinetInfo> queryBuilder = getReadCabinetInfoDao().queryBuilder();
+        queryBuilder.where(CabinetInfoDao.Properties.PaperworkId.eq("0"), CabinetInfoDao.Properties.UserIdCard.eq("0"));
+        List<CabinetInfo> cabinetInfoList = queryBuilder.list();
+        return cabinetInfoList;
+    }
+
+    /**
+     * 查询所有已使用的柜子
+     *
+     * @return
+     */
+    public List<CabinetInfo> queryUseredCabinetList() {
+        QueryBuilder<CabinetInfo> queryBuilder = getReadCabinetInfoDao().queryBuilder();
+        queryBuilder.where(CabinetInfoDao.Properties.PaperworkId.notEq("0"), CabinetInfoDao.Properties.UserIdCard.notEq("0"));
+        List<CabinetInfo> cabinetInfoList = queryBuilder.list();
+        return cabinetInfoList;
     }
 
 }

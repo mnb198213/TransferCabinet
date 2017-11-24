@@ -7,9 +7,9 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/title_background"
         android:paddingLeft="25dp"
-        android:paddingRight="25dp"
-        android:background="@color/title_background">
+        android:paddingRight="25dp">
 
         <TextView
             android:id="@+id/tv_title"
@@ -17,11 +17,11 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentTop="true"
+            android:layout_centerVertical="true"
             android:text="交接柜管理"
             android:textColor="@color/title_text_color"
             android:textSize="@dimen/small_title_size"
-            android:textStyle="bold"
-            android:layout_centerVertical="true"/>
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -34,20 +34,20 @@
                 android:id="@+id/tv_statue"
                 android:layout_width="200dp"
                 android:layout_height="@dimen/btn_height"
+                android:layout_gravity="bottom"
                 android:gravity="center"
                 android:text="未登录"
                 android:textColor="@color/smart_text_color"
-                android:textSize="20sp"
-                android:layout_gravity="bottom"/>
+                android:textSize="20sp" />
 
             <Button
                 android:id="@+id/btn_back"
                 android:layout_width="120dp"
                 android:layout_height="@dimen/btn_height"
+                android:layout_gravity="bottom"
                 android:layout_marginLeft="40dp"
                 android:background="@drawable/shape_btn_sure"
                 android:text="返回"
-                android:layout_gravity="bottom"
                 android:textColor="@color/smart_text_color"
                 android:textSize="@dimen/btn_text_size" />
         </LinearLayout>
@@ -69,7 +69,7 @@
             android:layout_weight="1"
             android:background="@drawable/shape_home"
             android:gravity="center"
-            android:text="取证"
+            android:text="回收"
             android:textColor="@color/smart_text_color"
             android:textSize="@dimen/home_small_title_text" />
 
@@ -81,7 +81,7 @@
             android:layout_weight="1"
             android:background="@drawable/shape_home"
             android:gravity="center"
-            android:text="存证"
+            android:text="发证"
             android:textColor="@color/smart_text_color"
             android:textSize="@dimen/home_small_title_text" />
 
@@ -103,10 +103,10 @@
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_alignParentBottom="true"
-        android:text="2017.10.26"
-        android:textSize="@dimen/time_text_size"
-        android:textColor="#C4C4C4"
-        android:gravity="end|center_vertical"
         android:background="#363636"
-        android:paddingRight="20dp"/>
+        android:gravity="end|center_vertical"
+        android:paddingRight="20dp"
+        android:text="2017.10.26"
+        android:textColor="#C4C4C4"
+        android:textSize="@dimen/time_text_size" />
 </RelativeLayout>

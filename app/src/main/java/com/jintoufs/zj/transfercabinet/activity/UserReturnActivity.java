@@ -15,10 +15,14 @@ import android.widget.TextView;
 
 import com.basekit.base.BaseActivity;
 import com.basekit.util.ToastUtils;
+import com.baselib.http.util.GsonHelper;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.adapter.ExampleImgAdapetr;
 import com.jintoufs.zj.transfercabinet.adapter.PaperworkAdapter;
+import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
+import com.jintoufs.zj.transfercabinet.db.DBManager;
 import com.jintoufs.zj.transfercabinet.model.bean.CertificateVo;
+import com.jintoufs.zj.transfercabinet.model.bean.PoVo;
 import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
 import com.jintoufs.zj.transfercabinet.net.NetService;
 import com.jintoufs.zj.transfercabinet.util.DensityUtil;
@@ -64,6 +68,9 @@ public class UserReturnActivity extends BaseActivity {
     private PaperworkAdapter paperworkAdapter;
     private List<CertificateVo> paperworkList;
     private Context mContext;
+    private boolean isAction = false;
+    private List<PoVo> poVoList;
+    private DBManager dbManager;
 
     private ExampleImgAdapetr exampleImgAdapetr;
     private int[] imgs = {R.mipmap.empty_img, R.mipmap.empty_img, R.mipmap.empty_img, R.mipmap.empty_img};
@@ -84,11 +91,14 @@ public class UserReturnActivity extends BaseActivity {
     public void initData() {
         super.initData();
         mContext = this;
+        dbManager = DBManager.getInstance(this);
         paperworkList = new ArrayList<>();
 
         paperworkAdapter = new PaperworkAdapter(this, paperworkList);
 
         exampleImgAdapetr = new ExampleImgAdapetr(this, imgs);
+
+        poVoList = new ArrayList<>();
     }
 
     @Override
@@ -110,13 +120,38 @@ public class UserReturnActivity extends BaseActivity {
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btn_back:
+                if (isAction) {
+                    ToastUtils.showShortToast(mContext, "请点击完成，确认存证完成");
+                } else {
+                    finish();
+                }
                 finish();
                 break;
             case R.id.btn_hand_do:
                 showInputPaperworkId("证件号：");
                 break;
             case R.id.btn_finish:
-                ToastUtils.showShortToast(mContext, "存证完成");
+                String strPovoList = GsonHelper.objectToJSONString(poVoList);
+                Call<ResponseInfo<String>> call = NetService.getApiService().tccInSubmit(strPovoList, null);
+                call.enqueue(new Callback<ResponseInfo<String>>() {
+                    @Override
+                    public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
+                        if ("200".equals(response.body().getCode())) {
+                            ToastUtils.showShortToast(mContext, "存证记录提交成功！");
+                            btnFinish.setVisibility(View.GONE);
+                            isAction = false;
+                        } else {
+                            ToastUtils.showShortToast(mContext, "存证记录提交失败！");
+                            btnFinish.setVisibility(View.VISIBLE);
+                            isAction = true;
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
+                        Logger.i("异常：" + t.getMessage());
+                    }
+                });
                 break;
         }
     }
@@ -149,19 +184,52 @@ public class UserReturnActivity extends BaseActivity {
                 call.enqueue(new Callback<ResponseInfo<CertificateVo>>() {
                     @Override
                     public void onResponse(Call<ResponseInfo<CertificateVo>> call, Response<ResponseInfo<CertificateVo>> response) {
+                        Logger.i("正常返回");
                         if (response.body() != null) {
                             ResponseInfo<CertificateVo> responseInfo = response.body();
                             if ("200".equals(responseInfo.getCode())) {
                                 CertificateVo certificateVo = response.body().getData();
-                                if (certificateVo != null) {
-                                    Logger.i("certificateVo != null");
-                                    paperworkList.add(certificateVo);
-                                    paperworkAdapter.notifyDataSetChanged();
-                                } else {
-                                    Logger.i("certificateVo == null");
+                                if (certificateVo == null) {
+                                    ToastUtils.showLongToast(mContext, "证件信息加载出错");
+                                    return;
                                 }
+                                CabinetInfo cabinetInfo = dbManager.queryEmptyCabinet();
+                                if (cabinetInfo == null) {
+                                    ToastUtils.showLongToast(mContext, "抱歉，当前没有空柜可用！");
+                                    return;
+                                }
+                                String cabinetNumber = cabinetInfo.getCabinetNumber();
+                                String[] strs = cabinetNumber.split(",");
+                                String row = strs[1];
+                                String col = strs[2];
+                                //打开柜子，放入证件，关上柜子
+                                //、、、、、、、、、、、、、、、、、、、、
+                                //、、、、、、、、、、、、、、、、、、
+                                cabinetInfo.setUserIdCard(certificateVo.getIdCard());
+                                cabinetInfo.setPaperworkId(certificateVo.getNumber());
+                                cabinetInfo.setDepartment(certificateVo.getOrgName());
+                                cabinetInfo.setType(certificateVo.getType());
+                                cabinetInfo.setUsername(certificateVo.getUserName());
+                                dbManager.updateCabinetInfo(cabinetInfo);
+
+                                PoVo poVo = new PoVo();
+                                poVo.setCabinetSerialNo(strs[0]);
+                                if (row.length() == 1)
+                                    row = "0" + strs[1];
+                                if (col.length() == 1)
+                                    col = "0" + strs[2];
+                                poVo.setLocationCode(row + col);
+                                poVo.setNumber(cabinetInfo.getPaperworkId());
+                                poVoList.add(poVo);
+
+                                isAction = true;
+                                btnFinish.setVisibility(View.VISIBLE);
+                                paperworkList.add(certificateVo);
+                                paperworkAdapter.notifyDataSetChanged();
+                                dialog.dismiss();
                             } else {
                                 Logger.i("请求码：" + responseInfo.getCode() + responseInfo.getMsg());
+                                ToastUtils.showLongToast(mContext, responseInfo.getMsg());
                             }
                         } else {
                             Logger.i("response.body() == null");

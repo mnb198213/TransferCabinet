@@ -5,27 +5,25 @@ package com.jintoufs.zj.transfercabinet.model.bean;
  */
 
 public class CertificateVo {
-//    certificateVo{String cUserId, String userName，String sex，String bornDate，String nation，String idCard，String phone，
-//        String orgName，String typeName，String number，String phySerialNum ,String image}
-    private String cUserId;
-    private String userName;
-    private String sex;
-    private String bornDate;
-    private String nation;
-    private String idCard;
-    private String phone;
-    private String orgName;
-    private String typeName;
-    private String number;
-    private String phySerialNum;
-    private String image;
 
-    public String getcUserId() {
-        return cUserId;
+    private String certUserId;//证件用户Id
+    private String userName;//证件用户名
+    private String sex;//1 男  ； 2 女
+    private String bornDate;
+    private String nation;//民族
+    private String idCard;//用户身份证
+    private String phone;//用户电话
+    private String orgName;//用户机构
+    private String type;//0 护照 ； 1 港澳通行证 ； 2 台湾通行证
+    private String number;//证件号
+    private String image;//base64形式
+
+    public String getCertUserId() {
+        return certUserId;
     }
 
-    public void setcUserId(String cUserId) {
-        this.cUserId = cUserId;
+    public void setCertUserId(String certUserId) {
+        this.certUserId = certUserId;
     }
 
     public String getUserName() {
@@ -84,14 +82,6 @@ public class CertificateVo {
         this.orgName = orgName;
     }
 
-    public String getTypeName() {
-        return typeName;
-    }
-
-    public void setTypeName(String typeName) {
-        this.typeName = typeName;
-    }
-
     public String getNumber() {
         return number;
     }
@@ -100,19 +90,19 @@ public class CertificateVo {
         this.number = number;
     }
 
-    public String getPhySerialNum() {
-        return phySerialNum;
-    }
-
-    public void setPhySerialNum(String phySerialNum) {
-        this.phySerialNum = phySerialNum;
-    }
-
     public String getImage() {
         return image;
     }
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

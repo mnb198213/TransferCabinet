@@ -12,27 +12,49 @@ import org.greenrobot.greendao.annotation.Property;
 public class CabinetInfo {
     @Id
     private Long id;
-    @Property(nameInDb = "USERID")
-    private String userId;//一个柜子对应的用户id
+    @Property(nameInDb = "USERIDCARD")
+    private String userIdCard;//一个柜子对应的用户身份证号
+    @Property(nameInDb = "USERNAME")
+    private String username;//一个柜子对应的用户名
+    @Property(nameInDb = "DEPARTMENT")
+    private String department;//一个柜子对应用户的所属部门
     @Property(nameInDb = "CABINETNUMBER")
     private String cabinetNumber;//交接柜的编号+柜子的行列号（xxxxxxxxxxx,xx,xx）
     @Property(nameInDb = "PAPERWORKID")
-    private String paperworkId;//一个柜子里面所有证件的id号
-    @Property(nameInDb = "STATUE")
-    private int statue;//标识柜子的开关状态，1为开，0为关
+    private String paperworkId;//一个柜子里面证件的证件号
+    @Property(nameInDb = "TYPE")
+    private String type;//证件类型
 
-    @Generated(hash = 1560636593)
-    public CabinetInfo(Long id, String userId, String cabinetNumber,
-                       String paperworkId, int statue) {
+    @Generated(hash = 24325864)
+    public CabinetInfo(Long id, String userIdCard, String username,
+            String department, String cabinetNumber, String paperworkId, String type) {
         this.id = id;
-        this.userId = userId;
+        this.userIdCard = userIdCard;
+        this.username = username;
+        this.department = department;
         this.cabinetNumber = cabinetNumber;
         this.paperworkId = paperworkId;
-        this.statue = statue;
+        this.type = type;
     }
 
     @Generated(hash = 1973192954)
     public CabinetInfo() {
+    }
+
+    public String getUserIdCard() {
+        return userIdCard;
+    }
+
+    public void setUserIdCard(String userIdCard) {
+        this.userIdCard = userIdCard;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public Long getId() {
@@ -41,14 +63,6 @@ public class CabinetInfo {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
     }
 
     public String getCabinetNumber() {
@@ -67,11 +81,20 @@ public class CabinetInfo {
         this.paperworkId = paperworkId;
     }
 
-    public int getStatue() {
-        return statue;
+
+    public String getUsername() {
+        return this.username;
     }
 
-    public void setStatue(int statue) {
-        this.statue = statue;
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getDepartment() {
+        return this.department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
     }
 }

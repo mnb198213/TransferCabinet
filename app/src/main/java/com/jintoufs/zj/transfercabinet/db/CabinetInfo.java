@@ -22,7 +22,7 @@ public class CabinetInfo {
     private String cabinetNumber;//交接柜的编号+柜子的行列号（xxxxxxxxxxx,xx,xx）
     @Property(nameInDb = "PAPERWORKID")
     private String paperworkId;//一个柜子里面证件的证件号
-    @Property(nameInDb = "TYPE")
+    @Property(nameInDb = "TYPE")//0 护照 ；1 港澳通行证 ；2 台湾通行证
     private String type;//证件类型
 
     @Generated(hash = 24325864)

@@ -215,6 +215,18 @@
                             android:textSize="25sp" />
                     </LinearLayout>
                 </LinearLayout>
+                <Button
+                    android:id="@+id/btn_set"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="设置交接柜信息"
+                    android:layout_marginTop="40dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/shape_btn_sure"
+                    android:textSize="@dimen/btn_text_size"
+                    android:textColor="@color/smart_text_color"
+                    android:paddingLeft="20dp"
+                    android:paddingRight="20dp" />
             </LinearLayout>
         </LinearLayout>
 

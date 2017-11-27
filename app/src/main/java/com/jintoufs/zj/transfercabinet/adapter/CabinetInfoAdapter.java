@@ -35,15 +35,13 @@ public class CabinetInfoAdapter extends RecyclerView.Adapter<CabinetInfoAdapter.
     public void onBindViewHolder(CabinetHolder holder, final int position) {
         CabinetInfo cabinetInfoBean = cabinetInfoBeanList.get(position);
         //识别证件类型
-//        if ("0".equals(cabinetInfoBean.getType())) {
-//            holder.tv_type.setText();
-//        } else if ("".equals(cabinetInfoBean.getType())) {
-//            holder.tv_type.setText();
-//        } else if ("".equals(cabinetInfoBean.getType())) {
-//            holder.tv_type.setText();
-//        }
-
-        holder.tv_type.setText("港澳通行证");
+        if ("0".equals(cabinetInfoBean.getType())) {
+            holder.tv_type.setText("护照");
+        } else if ("1".equals(cabinetInfoBean.getType())) {
+            holder.tv_type.setText("港澳通行证");
+        } else if ("2".equals(cabinetInfoBean.getType())) {
+            holder.tv_type.setText("台湾通行证");
+        }
         holder.tv_username.setText(cabinetInfoBean.getUsername());
         holder.tv_agency.setText(cabinetInfoBean.getDepartment());
         holder.tv_IDNumber.setText(cabinetInfoBean.getUserIdCard());

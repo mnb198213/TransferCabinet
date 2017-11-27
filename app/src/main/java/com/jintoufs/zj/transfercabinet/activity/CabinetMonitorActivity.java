@@ -2,6 +2,7 @@ package com.jintoufs.zj.transfercabinet.activity;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,6 +19,7 @@ import com.jintoufs.zj.transfercabinet.adapter.DrawerAdapter;
 import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
 import com.jintoufs.zj.transfercabinet.db.DBManager;
 import com.jintoufs.zj.transfercabinet.model.CabinetInfoBeanModel;
+import com.jintoufs.zj.transfercabinet.model.CabinetModel;
 import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfoBean;
 import com.jintoufs.zj.transfercabinet.model.bean.Drawer;
 import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
@@ -28,8 +30,12 @@ import com.jintoufs.zj.transfercabinet.util.SharedPreferencesHelper;
 import com.jintoufs.zj.transfercabinet.widget.SpaceDrawerItemDecoration;
 import com.orhanobut.logger.Logger;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -59,6 +65,8 @@ public class CabinetMonitorActivity extends BaseActivity {
     Button btnOpenSingle;
     @BindView(R.id.btn_open_all)
     Button btnOpenAll;
+    @BindView(R.id.btn_set)
+    Button btnSet;
 
     private Unbinder unbinder;
     private DrawerAdapter drawerAdapter;
@@ -74,11 +82,15 @@ public class CabinetMonitorActivity extends BaseActivity {
     private User user;//库管员
     private SharedPreferencesHelper sharedPreferencesHelper;
     private String serialNo;
+    private String IPAddress;
+    private CabinetModel cabinetModel;
+    private ExecutorService singleThreadPool;//单任务线程池
 
     @Override
     public void initData() {
         mContext = this;
         sharedPreferencesHelper = new SharedPreferencesHelper(this);
+        IPAddress = (String) sharedPreferencesHelper.get("IpAddress", null);
         user = getIntent().getParcelableExtra("User");
         dbManager = DBManager.getInstance(mContext);
         cabinetInfoBeanModel = new CabinetInfoBeanModel(mContext);
@@ -91,7 +103,7 @@ public class CabinetMonitorActivity extends BaseActivity {
         for (int i = 0; i < cabinetInfoList.size(); i++) {
             Drawer drawer = new Drawer();
             drawer.setRaw(i / column + 1);
-            drawer.setColumn(i % column+1);
+            drawer.setColumn(i % column + 1);
             CabinetInfo cabinetInfo = cabinetInfoList.get(i);
             if (cabinetInfo.getPaperworkId().equals("0") && cabinetInfo.getUserIdCard().equals("0")) {
                 drawer.setState("0");
@@ -106,6 +118,20 @@ public class CabinetMonitorActivity extends BaseActivity {
         }
         drawerAdapter = new DrawerAdapter(mContext, drawerList);
         serialNo = (String) sharedPreferencesHelper.get("SerialNo", null);
+        singleThreadPool = Executors.newSingleThreadExecutor();
+        singleThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    cabinetModel = new CabinetModel(IPAddress);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Logger.i("异常：" + e.getMessage());
+                    return;
+                }
+            }
+        });
+
     }
 
     @Override
@@ -150,7 +176,7 @@ public class CabinetMonitorActivity extends BaseActivity {
 
     }
 
-    @OnClick({R.id.tv_statue, R.id.btn_back, R.id.btn_open_single, R.id.btn_open_all})
+    @OnClick({R.id.tv_statue, R.id.btn_back, R.id.btn_open_single, R.id.btn_open_all, R.id.btn_set})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.tv_statue:
@@ -169,10 +195,36 @@ public class CabinetMonitorActivity extends BaseActivity {
                     ToastUtils.showShortToast(mContext, "未选中抽屉");
                     return;
                 }
+                if (serialNo == null) {
+                    ToastUtils.showShortToast(mContext, "柜子编号获取失败！");
+                    return;
+                }
+                String row = String.valueOf(drawer.getRaw());
+                if (row.length() == 1) {
+                    row = "0" + row;
+                }
+                String col = String.valueOf(drawer.getColumn());
+                if (col.length() == 1) {
+                    col = "0" + col;
+                }
+                Logger.i("柜子行列数：" + row + "  " + col);
                 if (drawer.isOpen()) {//已打开
 
                     //关闭柜子操作
-                    //、、、、、、、、、、、、、
+                    //、、、、、、、、、、
+//                    singleThreadPool.execute(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            if ()
+//                        }
+//                    });
+                    try {
+                        if (cabinetModel.isOpen(row, col)) {
+                            cabinetModel.closeDrawer(row, col);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
                     btnOpenSingle.setText("打开当前柜子");
                     drawer.setOpen(false);
@@ -180,39 +232,45 @@ public class CabinetMonitorActivity extends BaseActivity {
 
                     //打开柜子操作
                     //、、、、、、、、、、、
-                    if (serialNo == null) {
-                        ToastUtils.showShortToast(mContext, "柜子编号获取失败！");
-                        return;
-                    }
-                    String row = String.valueOf(drawer.getRaw());
-                    if (row.length() == 1) {
-                        row = "0" + row;
-                    }
-                    String col = String.valueOf(drawer.getColumn());
-                    if (col.length() == 1) {
-                        col = "0" + col;
-                    }
-                    Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(), "1", serialNo, row + col);
-                    call.enqueue(new Callback<ResponseInfo<String>>() {
-                        @Override
-                        public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
-                            if ("200".equals(response.body().getCode())) {
-                                Logger.i("提交成功");
-                            } else {
-                                Logger.i("提交失败");
-                            }
+                    try {
+                        if (!cabinetModel.isOpen(row, col)) {
+                            cabinetModel.openDrawer(row, col);
                         }
+                        if (!cabinetModel.isOpen(row, col)) {
+                            ToastUtils.showShortToast(mContext, "柜子打开失败！");
+                            return;
+                        }
+                        btnOpenSingle.setText("关闭当前柜子");
+                        drawer.setOpen(true);
+                        drawerAdapter.clearSelected();
+                        drawerAdapter.notifyDataSetChanged();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
-                        @Override
-                        public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
-                            Logger.i("异常：" + t.getMessage());
-                        }
-                    });
-                    btnOpenSingle.setText("关闭当前柜子");
-                    drawer.setOpen(true);
+//                    Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(),
+//                            "1", serialNo, row + col);
+//                    call.enqueue(new Callback<ResponseInfo<String>>() {
+//                        @Override
+//                        public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
+//                            if ("200".equals(response.body().getCode())) {
+//                                Logger.i("提交成功");
+////                                btnOpenSingle.setText("关闭当前柜子");
+////                                drawer.setOpen(true);
+////                                drawerAdapter.clearSelected();
+////                                drawerAdapter.notifyDataSetChanged();
+//                            } else {
+//                                Logger.i("提交失败");
+//                            }
+//                        }
+//
+//                        @Override
+//                        public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
+//                            Logger.i("异常：" + t.getMessage());
+//                        }
+//                    });
                 }
-                drawerAdapter.clearSelected();
-                drawerAdapter.notifyDataSetChanged();
+
                 break;
             case R.id.btn_open_all:
                 if (!isAllOpen) {
@@ -220,6 +278,10 @@ public class CabinetMonitorActivity extends BaseActivity {
                 } else {
                     showNoticeDialog("确定关闭所有柜子");
                 }
+                break;
+            case R.id.btn_set://设置交接柜
+                Intent intent = new Intent(CabinetMonitorActivity.this, CabinetSetActivity.class);
+                startActivity(intent);
                 break;
         }
     }
@@ -245,7 +307,7 @@ public class CabinetMonitorActivity extends BaseActivity {
                 if (!isAllOpen) {
                     //打开所有柜门操作
                     //、、、、、、、、、、、、、
-                    Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(), "2", serialNo,null);
+                    Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(), "2", serialNo, null);
                     call.enqueue(new Callback<ResponseInfo<String>>() {
                         @Override
                         public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {

@@ -15,20 +15,21 @@ public class CabinetModel {
 
     private static OutputStream os;
     private static InputStream is;
+    private Socket socket;
 
-    public CabinetModel(String cabinetIP) {
+    public CabinetModel(String cabinetIP) throws IOException {
         this.cabinet_ip = cabinetIP;
+        socket =  new Socket(cabinet_ip, PORT);
     }
 
     /**
      * 向柜子发送信息
      *
-     * @param socket
      * @param buf
      * @return
      * @throws Exception
      */
-    private String sendDataToCabinet(Socket socket, byte[] buf) throws Exception {
+    private String sendDataToCabinet(byte[] buf) throws Exception {
         String backInfo = null;
         if (socket == null) {
             socket = new Socket(cabinet_ip, PORT);
@@ -58,7 +59,7 @@ public class CabinetModel {
      * @param row
      * @param column
      */
-    public String openDrawer(Socket socket, String row, String column) throws Exception {
+    public String openDrawer(String row, String column) throws Exception {
         int intRow = new Integer(row).intValue();
         int intColumn = new Integer(column).intValue();
         String strHex = Integer.toHexString(intRow);
@@ -68,7 +69,7 @@ public class CabinetModel {
         byte byteRow = new Integer(hexRow).byteValue();
         byte byteColumn = new Integer(hexColumn).byteValue();
         byte[] buf = {0x01, 0x00, 0x02, byteColumn, byteRow};
-        return sendDataToCabinet(socket, buf);
+        return sendDataToCabinet(buf);
     }
 
     /**
@@ -77,7 +78,7 @@ public class CabinetModel {
      * @param row
      * @param column
      */
-    public String closeDrawer(Socket socket, String row, String column) throws Exception {
+    public String closeDrawer(String row, String column) throws Exception {
         int intRow = new Integer(row).intValue();
         int intColumn = new Integer(column).intValue();
         String strHex = Integer.toHexString(intRow);
@@ -87,19 +88,18 @@ public class CabinetModel {
         byte byteRow = new Integer(hexRow).byteValue();
         byte byteColumn = new Integer(hexColumn).byteValue();
         byte[] buf = {0x02, 0x00, 0x02, byteColumn, byteRow};
-        return sendDataToCabinet(socket, buf);
+        return sendDataToCabinet(buf);
     }
 
     /**
      * 测试指定行列的抽屉
      *
-     * @param socket
      * @param row
      * @param column
      * @return
      * @throws Exception
      */
-    public String testDrawer(Socket socket, String row, String column) throws Exception {
+    public String testDrawer(String row, String column) throws Exception {
         int intRow = new Integer(row).intValue();
         int intColumn = new Integer(column).intValue();
         String strHex = Integer.toHexString(intRow);
@@ -109,10 +109,10 @@ public class CabinetModel {
         byte byteRow = new Integer(hexRow).byteValue();
         byte byteColumn = new Integer(hexColumn).byteValue();
         byte[] buf = {0x03, 0x00, 0x02, byteColumn, byteRow};
-        return sendDataToCabinet(socket, buf);
+        return sendDataToCabinet(buf);
     }
 
-    public boolean isOpen(Socket socket, String row, String column) throws Exception {
+    public boolean isOpen(String row, String column) throws Exception {
         int intRow = new Integer(row).intValue();
         int intColumn = new Integer(column).intValue();
         String strHex = Integer.toHexString(intRow);
@@ -122,7 +122,7 @@ public class CabinetModel {
         byte byteRow = new Integer(hexRow).byteValue();
         byte byteColumn = new Integer(hexColumn).byteValue();
         byte[] buf = {0x03, 0x00, 0x02, byteColumn, byteRow};
-        String backInfo = sendDataToCabinet(socket, buf);
+        String backInfo = sendDataToCabinet(buf);
         String[] strs = backInfo.split(" ");
         if (strs.length > 1) {
             String flag = strs[0];

@@ -4,6 +4,8 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -16,6 +18,7 @@ import com.basekit.base.BaseActivity;
 import com.basekit.util.ToastUtils;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.adapter.DrawerAdapter;
+import com.jintoufs.zj.transfercabinet.config.AppConstant;
 import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
 import com.jintoufs.zj.transfercabinet.db.DBManager;
 import com.jintoufs.zj.transfercabinet.model.CabinetInfoBeanModel;
@@ -74,7 +77,7 @@ public class CabinetMonitorActivity extends BaseActivity {
     private int column;
     private Context mContext;
     private List<Drawer> drawerList;
-    private Drawer drawer;
+    private Drawer drawer;//当前操作的柜子
 
     private boolean isAllOpen = false;//判断是否全部打开
     private DBManager dbManager;
@@ -82,9 +85,16 @@ public class CabinetMonitorActivity extends BaseActivity {
     private User user;//库管员
     private SharedPreferencesHelper sharedPreferencesHelper;
     private String serialNo;
-    private String IPAddress;
+
+    private String IPAddress;//交接柜IP
     private CabinetModel cabinetModel;
-    private ExecutorService singleThreadPool;//单任务线程池
+    private ExecutorService threadPool;//单任务线程池
+    private Socket socket;
+    private String row;//柜子的行
+    private String col;//柜子的列
+    private boolean isSingleOpen = false;//单个柜子是否打开
+    private Dialog waitDialog;
+    private int tryCount;//尝试发送指令次数
 
     @Override
     public void initData() {
@@ -118,20 +128,7 @@ public class CabinetMonitorActivity extends BaseActivity {
         }
         drawerAdapter = new DrawerAdapter(mContext, drawerList);
         serialNo = (String) sharedPreferencesHelper.get("SerialNo", null);
-        singleThreadPool = Executors.newSingleThreadExecutor();
-        singleThreadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    cabinetModel = new CabinetModel(IPAddress);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Logger.i("异常：" + e.getMessage());
-                    return;
-                }
-            }
-        });
-
+        threadPool = Executors.newCachedThreadPool();
     }
 
     @Override
@@ -160,20 +157,14 @@ public class CabinetMonitorActivity extends BaseActivity {
                 } else {
                     btnOpenSingle.setText("打开当前柜子");
                 }
+
             }
         });
         rvCabinets.setLayoutManager(new GridLayoutManager(mContext, column));
         rvCabinets.addItemDecoration(new SpaceDrawerItemDecoration(mContext, DensityUtil.dip2px(mContext, 1)));
         rvCabinets.setAdapter(drawerAdapter);
-
-        if (isAllOpen) {
-            btnOpenAll.setText("打开所有柜子");
-        } else {
-            btnOpenAll.setText("关闭所有柜子");
-        }
+        btnOpenAll.setText("打开所有柜子");
         btnOpenSingle.setText("打开单个柜子");
-
-
     }
 
     @OnClick({R.id.tv_statue, R.id.btn_back, R.id.btn_open_single, R.id.btn_open_all, R.id.btn_set})
@@ -199,80 +190,91 @@ public class CabinetMonitorActivity extends BaseActivity {
                     ToastUtils.showShortToast(mContext, "柜子编号获取失败！");
                     return;
                 }
-                String row = String.valueOf(drawer.getRaw());
+
+                isSingleOpen = drawer.isOpen();
+
+                row = String.valueOf(drawer.getRaw());
                 if (row.length() == 1) {
                     row = "0" + row;
                 }
-                String col = String.valueOf(drawer.getColumn());
+                col = String.valueOf(drawer.getColumn());
                 if (col.length() == 1) {
                     col = "0" + col;
                 }
                 Logger.i("柜子行列数：" + row + "  " + col);
                 if (drawer.isOpen()) {//已打开
-
+                    Logger.i("柜子关闭操作");
+                    if (waitDialog == null || !waitDialog.isShowing()) {
+                        waitDialog = getWaitDialog(mContext, "柜子正在关闭...");
+                        waitDialog.show();
+                    }
                     //关闭柜子操作
-                    //、、、、、、、、、、
-//                    singleThreadPool.execute(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            if ()
-//                        }
-//                    });
-                    try {
-                        if (cabinetModel.isOpen(row, col)) {
-                            cabinetModel.closeDrawer(row, col);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    threadPool.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (socket == null)
+                                    socket = new Socket(IPAddress, AppConstant.PORT);
+                                Logger.i("发送关柜子指令");
 
-                    btnOpenSingle.setText("打开当前柜子");
-                    drawer.setOpen(false);
+                                tryCount = 0;
+                                while (isSingleOpen && tryCount != 5) {
+                                    CabinetModel.closeDrawer(socket, row, col);
+                                    Thread.sleep(1000);
+                                    isSingleOpen = CabinetModel.isOpen(socket, row, col);
+                                    Logger.i("关柜子反馈：" + isSingleOpen);
+                                    tryCount++;
+                                }
+                                sendMessageToHandler(mHandler, isSingleOpen, 1);
+                            } catch (Exception e) {
+                                Logger.i("异常：" + e.getClass().getName());
+                                e.printStackTrace();
+                            }
+                        }
+                    });
                 } else {
-
-                    //打开柜子操作
-                    //、、、、、、、、、、、
-                    try {
-                        if (!cabinetModel.isOpen(row, col)) {
-                            cabinetModel.openDrawer(row, col);
-                        }
-                        if (!cabinetModel.isOpen(row, col)) {
-                            ToastUtils.showShortToast(mContext, "柜子打开失败！");
-                            return;
-                        }
-                        btnOpenSingle.setText("关闭当前柜子");
-                        drawer.setOpen(true);
-                        drawerAdapter.clearSelected();
-                        drawerAdapter.notifyDataSetChanged();
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    Logger.i("柜子打开操作");
+                    if (waitDialog == null) {
+                        waitDialog = getWaitDialog(mContext, "柜子正在打开...");
+                        waitDialog.show();
+                    } else {
+                        waitDialog.dismiss();
+                        waitDialog = getWaitDialog(mContext, "柜子正在打开...");
+                        waitDialog.show();
                     }
+                    //打开柜子操作
+                    threadPool.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (socket == null)
+                                    socket = new Socket(IPAddress, AppConstant.PORT);
+                                Logger.i("发送开柜子指令");
 
-//                    Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(),
-//                            "1", serialNo, row + col);
-//                    call.enqueue(new Callback<ResponseInfo<String>>() {
-//                        @Override
-//                        public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
-//                            if ("200".equals(response.body().getCode())) {
-//                                Logger.i("提交成功");
-////                                btnOpenSingle.setText("关闭当前柜子");
-////                                drawer.setOpen(true);
-////                                drawerAdapter.clearSelected();
-////                                drawerAdapter.notifyDataSetChanged();
-//                            } else {
-//                                Logger.i("提交失败");
-//                            }
-//                        }
-//
-//                        @Override
-//                        public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
-//                            Logger.i("异常：" + t.getMessage());
-//                        }
-//                    });
+                                tryCount = 0;
+                                while (!isSingleOpen && tryCount != 5) {
+                                    CabinetModel.openDrawer(socket, row, col);
+                                    Thread.sleep(1000);
+                                    isSingleOpen = CabinetModel.isOpen(socket, row, col);
+                                    tryCount++;
+                                }
+                                sendMessageToHandler(mHandler, isSingleOpen, 1);
+                            } catch (Exception e) {
+                                Logger.i("异常：" + e.getClass().getName());
+                                e.printStackTrace();
+                            }
+                        }
+                    });
                 }
 
                 break;
             case R.id.btn_open_all:
+                if (serialNo == null) {
+                    ToastUtils.showShortToast(mContext, "柜子编号获取失败！");
+                    return;
+                }
+                drawerAdapter.clearSelected();//清除柜子的选中状态
+
                 if (!isAllOpen) {
                     showNoticeDialog("确定打开所有柜子");
                 } else {
@@ -284,6 +286,127 @@ public class CabinetMonitorActivity extends BaseActivity {
                 startActivity(intent);
                 break;
         }
+    }
+
+    private boolean isAll = true;
+    private boolean isFinish = true;
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 1://单个柜子操作
+                    Bundle bundle = msg.getData();
+                    boolean isOpen = bundle.getBoolean("IsOpen");
+                    if (waitDialog != null && waitDialog.isShowing()) {
+                        waitDialog.dismiss();
+                    }
+                    if (isOpen) {
+                        Logger.i("打开柜子成功");
+                        btnOpenSingle.setText("关闭当前柜子");
+                        //柜子打开上传操作记录
+//                Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(),
+//                        "1", serialNo, row + col);
+//                call.enqueue(new retrofit2.Callback<ResponseInfo<String>>() {
+//                    @Override
+//                    public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
+//                        if ("200".equals(response.body().getCode())) {
+//                            Logger.i("提交成功");
+//                        } else {
+//                            Logger.i("提交失败");
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
+//                        Logger.i("请求失败的异常：" + t.getMessage());
+//                    }
+//                });
+
+                    } else {
+                        Logger.i("关闭柜子成功");
+                        btnOpenSingle.setText("打开当前柜子");
+                    }
+                    drawer.setOpen(isOpen);
+                    drawerAdapter.clearSelected();
+                    drawerAdapter.notifyDataSetChanged();
+                    break;
+                case 2://对全部柜子开操作过程中...
+                   boolean isOpen2 = (boolean) msg.obj;
+                    Logger.i("handler： 行："+drawer.getRaw()+"  isOpen:"+isOpen2);
+                    if (!isOpen2){
+                        isAll = false;
+                    }
+                    drawer.setOpen(isOpen2);
+                    drawerAdapter.notifyDataSetChanged();
+                    break;
+                case 3://对全部柜子开操作结束
+                    if (waitDialog != null && waitDialog.isShowing()) {
+                        waitDialog.dismiss();
+                    }
+                    isAllOpen = true;
+                    btnOpenAll.setText("关闭所有柜子");
+                    if (!isAll){
+                        ToastUtils.showLongToast(mContext,"提示：有未正常打开的柜子，请检查故障！");
+                    }else {
+                        ToastUtils.showLongToast(mContext,"全部柜子已打开！");
+                    }
+                    break;
+                case 4://对全部柜子关操作过程中...
+                    boolean isOpen4 = (boolean) msg.obj;
+                    if (!isOpen4){
+                        isFinish = false;
+                    }
+                    drawer.setOpen(isOpen4);
+                    drawerAdapter.notifyDataSetChanged();
+                    break;
+                case 5://对全部柜子关操作结束
+                    if (waitDialog != null && waitDialog.isShowing()) {
+                        waitDialog.dismiss();
+                    }
+                    isAllOpen = false;
+                    btnOpenAll.setText("打开所有柜子");
+                    if (isFinish){
+                        ToastUtils.showLongToast(mContext,"全部柜子已关闭！");
+                    }else {
+                        ToastUtils.showLongToast(mContext,"提示：有未正常关闭的柜子，请检查故障！");
+                    }
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+    };
+
+    //单开发消息
+    private void sendMessageToHandler(Handler handler, boolean isOpen, int what) {
+        Message message = Message.obtain();
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("IsOpen", isOpen);
+        message.setData(bundle);
+        message.what = what;
+        handler.sendMessage(message);
+    }
+
+    //全开发消息
+    private void sendMessageToHandler(Handler handler, boolean isOpen, boolean isOver, int what) {
+        Message message = Message.obtain();
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("IsOpen", isOpen);
+        bundle.putBoolean("IsOver", isOver);
+        message.setData(bundle);
+        message.what = what;
+        handler.sendMessage(message);
+    }
+
+    private Dialog getWaitDialog(Context context, String info) {
+        Dialog dialog = new Dialog(context, R.style.TransparentDialogStyle);
+        dialog.setCanceledOnTouchOutside(false);
+        Window window = dialog.getWindow();
+        View view = View.inflate(context, R.layout.dialog_search_view, null);
+        TextView tv_info = (TextView) view.findViewById(R.id.tv_info);
+        tv_info.setText(info);
+        window.setContentView(view);
+        return dialog;
     }
 
     private void showNoticeDialog(String info) {
@@ -304,41 +427,143 @@ public class CabinetMonitorActivity extends BaseActivity {
         tv_try_again.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!isAllOpen) {
-                    //打开所有柜门操作
-                    //、、、、、、、、、、、、、
-                    Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(), "2", serialNo, null);
-                    call.enqueue(new Callback<ResponseInfo<String>>() {
+                dialog.dismiss();
+                if (!isAllOpen) {//执行全开操作
+                    if (waitDialog == null) {
+                        waitDialog = getWaitDialog(mContext, "柜子正在依次打开...");
+                        waitDialog.show();
+                    } else {
+                        waitDialog.dismiss();
+                        waitDialog = getWaitDialog(mContext, "柜子正在依次打开...");
+                        waitDialog.show();
+                    }
+                    threadPool.execute(new Runnable() {
                         @Override
-                        public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
-                            if ("200".equals(response.body().getCode())) {
-                                Logger.i("提交成功");
-                            } else {
-                                Logger.i("提交失败");
-                            }
-                        }
+                        public void run() {
+                            int count = drawerList.size();
+                            for (int i = 0; i < count; i++) {
+                                drawer = drawerList.get(i);
+                                isSingleOpen = drawer.isOpen();
 
-                        @Override
-                        public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
-                            Logger.i("异常：" + t.getMessage());
+                                row = String.valueOf(drawer.getRaw());
+                                if (row.length() == 1) {
+                                    row = "0" + row;
+                                }
+                                col = String.valueOf(drawer.getColumn());
+                                if (col.length() == 1) {
+                                    col = "0" + col;
+                                }
+                                    try {
+                                        if (socket == null)
+                                            socket = new Socket(IPAddress, AppConstant.PORT);
+
+                                        tryCount = 0;
+                                        while (!isSingleOpen && tryCount != 5) {
+                                            CabinetModel.openDrawer(socket, row, col);
+                                            Thread.sleep(1000);
+                                            isSingleOpen = CabinetModel.isOpen(socket, row, col);
+                                            tryCount++;
+                                        }
+                                        Logger.i("行："+drawer.getRaw()+"  isOpen:"+isSingleOpen);
+                                        Message message= Message.obtain();
+                                        message.obj = isSingleOpen;
+                                        message.what = 2;
+                                        mHandler.sendMessage(message);
+
+                                        Thread.sleep(1000);//休眠1秒，让线程有足够时间处理逻辑
+                                    } catch (Exception e) {
+                                        Logger.i("异常：" + e.getClass().getName());
+                                        e.printStackTrace();
+                                    }
+                            }
+                            //完成
+                            Message message = Message.obtain();
+                            message.what = 3;
+                            mHandler.sendMessage(message);
                         }
                     });
-                    for (Drawer drawer : drawerList) {
-                        drawer.setOpen(true);
+                } else {//执行全关操作
+//                    Logger.i("长度：" + drawerList.size());
+//                    for (int i = 0; i < drawerList.size(); i++) {
+//                        drawer = drawerList.get(i);
+//                        isSingleOpen = drawer.isOpen();
+//                        Logger.i("是否开启：" + isSingleOpen);
+//                    }
+                    if (waitDialog == null) {
+                        waitDialog = getWaitDialog(mContext, "柜子正在依次关闭...");
+                        waitDialog.show();
+                    } else {
+                        waitDialog.dismiss();
+                        waitDialog = getWaitDialog(mContext, "柜子正在依次关闭...");
+                        waitDialog.show();
                     }
-                    isAllOpen = true;
-                    btnOpenAll.setText("关闭所有柜子");
-                } else {
-                    //关闭所有柜子
-                    for (Drawer drawer : drawerList) {
-                        drawer.setOpen(false);
-                    }
-                    isAllOpen = false;
-                    btnOpenAll.setText("打开所有柜子");
+                    threadPool.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            int count = drawerList.size();
+                            for (int i = 0; i < count; i++) {
+                                drawer = drawerList.get(i);
+                                isSingleOpen = drawer.isOpen();
+
+                                row = String.valueOf(drawer.getRaw());
+                                if (row.length() == 1) {
+                                    row = "0" + row;
+                                }
+                                col = String.valueOf(drawer.getColumn());
+                                if (col.length() == 1) {
+                                    col = "0" + col;
+                                }
+
+                                if (isSingleOpen) {//当为打开的时候才调用关闭柜子命令
+                                    try {
+                                        if (socket == null)
+                                            socket = new Socket(IPAddress, AppConstant.PORT);
+                                        Logger.i("发送关柜子指令");
+
+                                        tryCount = 0;
+                                        while (isSingleOpen && tryCount != 5) {
+                                            CabinetModel.closeDrawer(socket, row, col);
+                                            Thread.sleep(1000);
+                                            isSingleOpen = CabinetModel.isOpen(socket, row, col);
+                                            tryCount++;
+                                        }
+                                        //关柜子过程中
+                                        Message message = Message.obtain();
+                                        message.obj = isSingleOpen;
+                                        message.what = 4;
+                                        mHandler.sendMessage(message);
+
+                                        Thread.sleep(1000);//休眠1秒，让线程有足够时间处理逻辑
+                                    } catch (Exception e) {
+                                        Logger.i("异常：" + e.getClass().getName());
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                            //关柜子结束
+                            Message message = Message.obtain();
+                            message.what = 5;
+                            mHandler.sendMessage(message);
+                        }
+                    });
                 }
-                drawerAdapter.clearSelected();
-                drawerAdapter.notifyDataSetChanged();
-                dialog.dismiss();
+//                     //上传操作所有柜子的记录
+//                    Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(), "2", serialNo, null);
+//                    call.enqueue(new Callback<ResponseInfo<String>>() {
+//                        @Override
+//                        public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
+//                            if ("200".equals(response.body().getCode())) {
+//                                Logger.i("提交成功");
+//                            } else {
+//                                Logger.i("提交失败");
+//                            }
+//                        }
+//
+//                        @Override
+//                        public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
+//                            Logger.i("异常：" + t.getMessage());
+//                        }
+//                    });
             }
         });
         window.setContentView(view);

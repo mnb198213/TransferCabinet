@@ -205,6 +205,7 @@ public class UserReturnActivity extends BaseActivity {
                                 //打开柜子，放入证件，关上柜子
                                 //、、、、、、、、、、、、、、、、、、、、
                                 //、、、、、、、、、、、、、、、、、、
+
                                 cabinetInfo.setUserIdCard(certificateVo.getIdCard());
                                 cabinetInfo.setPaperworkId(certificateVo.getNumber());
                                 cabinetInfo.setDepartment(certificateVo.getOrgName());

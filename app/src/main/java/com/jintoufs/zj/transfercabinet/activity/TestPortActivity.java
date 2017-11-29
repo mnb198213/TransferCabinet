@@ -68,14 +68,14 @@ public class TestPortActivity extends SerialPortActivity {
                 if (!file.exists()) {
                     file.mkdir();
                 }
-                File imgFile = new File(file, "ccc.txt");
+                File imgFile = new File(file, "ddd.jpg");
                 String path = imgFile.getAbsolutePath();
                 byte2image(buffer, path);
                 Logger.i("文件长度：" + imgFile.length());
 //                Bitmap bitmap = BitmapFactory.decodeFile(path);
                 Drawable drawable = BitmapDrawable.createFromPath(path);
                 Logger.i("文件路径：" + path);
-//                iv_image.setImageDrawable(drawable);
+                iv_image.setImageDrawable(drawable);
 //                if (bitmap != null) {
 //                    Logger.i("bitmap 不为 null");
 //                    iv_image.setImageBitmap(bitmap);
@@ -93,6 +93,7 @@ public class TestPortActivity extends SerialPortActivity {
             imageOutput.write(data, 0, data.length);
             imageOutput.close();
         } catch (Exception ex) {
+            Logger.i("异常：" + ex.getClass().getName());
             System.out.println("Exception: " + ex);
             ex.printStackTrace();
         }

@@ -3,6 +3,8 @@ package com.jintoufs.zj.transfercabinet.activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,8 +19,10 @@ import com.basekit.util.ToastUtils;
 import com.baselib.http.util.GsonHelper;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.adapter.PaperworkAdapter;
+import com.jintoufs.zj.transfercabinet.config.AppConstant;
 import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
 import com.jintoufs.zj.transfercabinet.db.DBManager;
+import com.jintoufs.zj.transfercabinet.model.CabinetModel;
 import com.jintoufs.zj.transfercabinet.model.bean.CertificateVo;
 import com.jintoufs.zj.transfercabinet.model.bean.PoVo;
 import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
@@ -26,11 +30,16 @@ import com.jintoufs.zj.transfercabinet.model.bean.User;
 import com.jintoufs.zj.transfercabinet.net.NetService;
 import com.jintoufs.zj.transfercabinet.util.DensityUtil;
 import com.jintoufs.zj.transfercabinet.util.SharedPreferencesHelper;
+import com.jintoufs.zj.transfercabinet.util.TimeUtil;
 import com.jintoufs.zj.transfercabinet.widget.SpaceItemTopDecoration;
 import com.orhanobut.logger.Logger;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -68,6 +77,12 @@ public class ManagerCastActivity extends AppCompatActivity {
     private String paperworkId;
     private List<PoVo> poVoList = new ArrayList<>();
     private boolean isAction = false;
+    private CabinetInfo cabinetInfo;//当前操作的柜子
+    private String IPAddress;//交接柜IP
+    private String col, row;
+    private ExecutorService threadPool;//线程池
+    private Socket socket;
+    private SharedPreferencesHelper sharedPreferencesHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +91,8 @@ public class ManagerCastActivity extends AppCompatActivity {
         unbinder = ButterKnife.bind(this);
         mContext = this;
         dbManager = DBManager.getInstance(this);
+        sharedPreferencesHelper = new SharedPreferencesHelper(this);
+        IPAddress = (String) sharedPreferencesHelper.get("IpAddress", null);
         user = getIntent().getParcelableExtra("User");
         if (user == null) {
             ToastUtils.showShortToast(mContext, "user == null");
@@ -84,7 +101,68 @@ public class ManagerCastActivity extends AppCompatActivity {
         tvStatue.setText(user.getUserName() + " 已登录");
         paperworkList = new ArrayList<>();
         paperworkAdapter = new PaperworkAdapter(this, paperworkList);
+        paperworkAdapter.setOpenCabinetClickListener(new PaperworkAdapter.OpenCabinetClickListener() {
+            @Override
+            public void openCabinet(int position) {
+                if (cabinetInfo != null) {
+                    cabinetInfo = null;
+                }
+                //不考虑人手动关闭柜子
+                cabinetInfo = dbManager.openAEmptyCabinet();//打开一个空柜子
+                if (cabinetInfo == null) {
+                    ToastUtils.showLongToast(mContext, "抱歉，当前没有可用的空柜！");
+                    return;
+                }
 
+                paperworkAdapter.surePaperWorkToSave();
+            }
+        });
+        paperworkAdapter.setCloseCabinetClickListener(new PaperworkAdapter.CloseCabinetClickListener() {
+            @Override
+            public void closeCabinet(final int position) {
+                //关闭已经打开的柜子
+                String cabinetNumber = cabinetInfo.getCabinetNumber();
+                String[] strs = cabinetNumber.split(",");
+                if (strs.length != 3) {
+                    return;
+                }
+                row = strs[1];
+                col = strs[2];
+
+                threadPool.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (socket == null) socket = new Socket(IPAddress, AppConstant.PORT);
+                            int count = 0;
+                            boolean isOpen = true;
+                            while (isOpen && count != 5) {
+                                CabinetModel.closeDrawer(socket, row, col);
+                                Thread.sleep(500);
+                                isOpen = CabinetModel.isOpen(socket, row, col);
+                                count++;
+                            }
+                            Message message = Message.obtain();
+                            message.what = 2;
+                            message.obj = isOpen;
+                            message.arg1 = position;
+                            mHandler.sendMessage(message);
+
+                        } catch (Exception e) {
+                            Logger.i("关柜异常：" + e.getMessage());
+                        }
+                    }
+                });
+            }
+        });
+        paperworkAdapter.setReEnterClickListener(new PaperworkAdapter.ReEnterClickListener() {
+            @Override
+            public void reEnter(int position) {
+                cabinetInfo = null;
+                paperworkList.remove(position);
+                paperworkAdapter.notifyDataSetChanged();
+            }
+        });
         rvPaperwork.setLayoutManager(new LinearLayoutManager(this));
         rvPaperwork.addItemDecoration(new SpaceItemTopDecoration(DensityUtil.dip2px(this, 10)));
         rvPaperwork.setAdapter(paperworkAdapter);
@@ -129,6 +207,44 @@ public class ManagerCastActivity extends AppCompatActivity {
         }
     }
 
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == 2) {
+                boolean isOpen = (boolean) msg.obj;
+                if (!isOpen) {//正常关闭
+                    //更新本地柜子信息
+                    int position = msg.arg1;
+                    CertificateVo certificateVo = paperworkList.get(position);
+                    cabinetInfo.setUserIdCard(certificateVo.getIdCard());
+                    cabinetInfo.setPaperworkId(certificateVo.getNumber());
+                    cabinetInfo.setDepartment(certificateVo.getOrgName());
+                    cabinetInfo.setType(certificateVo.getType());
+                    cabinetInfo.setUsername(certificateVo.getUserName());
+                    dbManager.updateCabinetInfo(cabinetInfo);
+
+                    String cabinetNumber = cabinetInfo.getCabinetNumber();
+                    String[] strs = cabinetNumber.split(",");
+                    //生成一条开柜子的记录
+                    PoVo poVo = new PoVo();
+                    poVo.setCabinetSerialNo(strs[0]);
+                    if (row.length() == 1)
+                        row = "0" + strs[1];
+                    if (col.length() == 1)
+                        col = "0" + strs[2];
+                    poVo.setLocationCode(row + col);
+                    poVo.setNumber(cabinetInfo.getPaperworkId());
+                    poVoList.add(poVo);
+                    //标识有开箱记录，需要提交记录
+                    isAction = true;
+                    btnFinish.setVisibility(View.VISIBLE);
+                } else {
+                    ToastUtils.showLongToast(mContext, "柜子不能正常关闭，请换其他柜子存证");
+                }
+            }
+        }
+    };
+
     private void showInputPaperworkId(String info) {
         final Dialog dialog = new Dialog(this, R.style.TransparentDialogStyle);
         dialog.setCanceledOnTouchOutside(false);
@@ -161,49 +277,16 @@ public class ManagerCastActivity extends AppCompatActivity {
                             ResponseInfo<CertificateVo> responseInfo = response.body();
                             if ("200".equals(responseInfo.getCode())) {
                                 CertificateVo certificateVo = response.body().getData();
-                                if (certificateVo != null) {
-                                    Logger.i("certificateVo != null");
-                                    CabinetInfo cabinetInfo = dbManager.queryEmptyCabinet();
-                                    if (cabinetInfo != null) {//获取一个空柜子
-                                        String number = cabinetInfo.getCabinetNumber();
-                                        String[] strs = number.split(",");
-
-                                        String row = null;
-                                        if (strs[1].length() == 1) row = "0" + strs[1];
-                                        else row = strs[1];
-                                        String col = null;
-                                        if (strs[2].length() == 1) col = "0" + strs[2];
-                                        else col = strs[2];
-                                        //打开柜门，放证件，关闭柜门，完成投件操作
-                                        //、、、、、、、、、、、、、、、、、、、、、、、
-                                        //、、、、、、、、、、、、、、、、、、、、、、、
-                                        //、、、、、、、、、、、、、、、、、、、、、、、
-                                        cabinetInfo.setDepartment(certificateVo.getOrgName());
-                                        cabinetInfo.setUserIdCard(certificateVo.getIdCard());
-                                        cabinetInfo.setPaperworkId(certificateVo.getNumber());
-                                        cabinetInfo.setUsername(certificateVo.getUserName());
-                                        dbManager.updateCabinetInfo(cabinetInfo);
-
-                                        isAction = true;
-                                        PoVo poVo = new PoVo();
-                                        poVo.setLocationCode(strs[1] + strs[2]);
-                                        poVo.setNumber(cabinetInfo.getPaperworkId());
-                                        poVo.setCabinetSerialNo(strs[0]);
-                                        poVoList.add(poVo);
-
-                                        paperworkList.add(certificateVo);
-                                        paperworkAdapter.notifyDataSetChanged();
-                                        btnFinish.setVisibility(View.VISIBLE);
-                                        dialog.dismiss();
-                                    } else {
-                                        ToastUtils.showShortToast(mContext, "当前没有空的柜子");
-                                    }
-                                } else {
-                                    Logger.i("certificateVo == null");
+                                if (certificateVo == null) {
+                                    ToastUtils.showLongToast(mContext, "证件信息加载出错");
+                                    return;
                                 }
-                            } else if ("500".equals(responseInfo.getCode())) {
-                                ToastUtils.showShortToast(mContext, "查询不到该证件号");
+                                paperworkList.add(certificateVo);
+                                paperworkAdapter.notifyDataSetChanged();
+                                dialog.dismiss();
+                            } else {
                                 Logger.i("请求码：" + responseInfo.getCode() + responseInfo.getMsg());
+                                ToastUtils.showLongToast(mContext, responseInfo.getMsg());
                             }
                         } else {
                             Logger.i("response.body() == null");
@@ -223,10 +306,25 @@ public class ManagerCastActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStop() {
+        if (socket != null) {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        if (threadPool != null)
+            threadPool.shutdown();
+        super.onStop();
+    }
+
+    @Override
     protected void onDestroy() {
         if (unbinder != null) {
             unbinder.unbind();
         }
+
         super.onDestroy();
     }
 }

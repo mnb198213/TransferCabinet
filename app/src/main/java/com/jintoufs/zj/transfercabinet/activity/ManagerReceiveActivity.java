@@ -3,6 +3,8 @@ package com.jintoufs.zj.transfercabinet.activity;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -17,20 +19,26 @@ import com.baselib.http.util.GsonHelper;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.adapter.CabinetInfoAdapter;
 import com.jintoufs.zj.transfercabinet.adapter.TitleAdapter;
+import com.jintoufs.zj.transfercabinet.config.AppConstant;
 import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
 import com.jintoufs.zj.transfercabinet.db.DBManager;
+import com.jintoufs.zj.transfercabinet.model.CabinetModel;
 import com.jintoufs.zj.transfercabinet.model.bean.Drawer;
 import com.jintoufs.zj.transfercabinet.model.bean.PoVo;
 import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
 import com.jintoufs.zj.transfercabinet.model.bean.User;
 import com.jintoufs.zj.transfercabinet.net.NetService;
 import com.jintoufs.zj.transfercabinet.util.DensityUtil;
+import com.jintoufs.zj.transfercabinet.util.SharedPreferencesHelper;
 import com.jintoufs.zj.transfercabinet.widget.SpacePwItemDecoration;
 import com.jintoufs.zj.transfercabinet.widget.SpaceTitleItemDecoration;
 import com.orhanobut.logger.Logger;
 
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -73,12 +81,18 @@ public class ManagerReceiveActivity extends BaseActivity {
     private User user;
     private List<PoVo> poVoList;
     private boolean isAction = false;//判断是否有取证操作
+    private ExecutorService threadPool;
+    private Socket socket;
+    private SharedPreferencesHelper sharedPreferencesHelper;
+    private String IPAddress;
 
 
     @Override
     public void initData() {
         super.initData();
         mContext = this;
+        sharedPreferencesHelper = new SharedPreferencesHelper(this);
+        IPAddress = (String) sharedPreferencesHelper.get("IpAddress", null);
         titleAdapter = new TitleAdapter(mContext, new String[]{"证件类型", "人员", "机构/部门",
                 "身份证号", "交接柜", "柜门号", "操作"});
         user = getIntent().getParcelableExtra("User");
@@ -87,6 +101,7 @@ public class ManagerReceiveActivity extends BaseActivity {
         paperworkInfoList.addAll(dbManager.queryUseredCabinetList());
         cabinetInfoAdapter = new CabinetInfoAdapter(mContext, paperworkInfoList);
         poVoList = new ArrayList<>();
+        threadPool = Executors.newCachedThreadPool();
     }
 
     @Override
@@ -118,15 +133,41 @@ public class ManagerReceiveActivity extends BaseActivity {
         });
     }
 
-    private void openSingleCabinet(CabinetInfo cabinetInfo){
+    private void openSingleCabinet(CabinetInfo cabinetInfo) {
         //交接柜的编号+柜子的行列号（xxxxxxxxxxx,xx,xx）
         String cabinetNumber = cabinetInfo.getCabinetNumber();
         String[] strs = cabinetNumber.split(",");
-        String row = strs[1];
-        String col = strs[2];
+        if (strs.length != 3) {
+            ToastUtils.showLongToast(mContext, "柜子数据不合理，无法读取");
+            return;
+        }
+        final String row = strs[1];
+        final String col = strs[2];
         //showNoticeDialog("柜门已打开，请取走证件");
         //打开单个柜门，取证，关闭柜门，完成取证操作
-        //、、、、、、、、、、、、、
+        threadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (socket == null) socket = new Socket(IPAddress, AppConstant.PORT);
+                    int count = 0;
+                    boolean isOpen = false;
+                    while (isOpen && count != 5) {
+                        CabinetModel.openDrawer(socket,row,col);
+                        Thread.sleep(500);
+                        isOpen = CabinetModel.isOpen(socket,row,col);
+                    }
+                    Message message = Message.obtain();
+                    message.what=1;
+                    message.obj = isOpen;
+                    mHandler.sendMessage(message);
+                    ////////////////////////////////////////////////////////////////待续...
+                } catch (Exception e) {
+                    ToastUtils.showLongToast(mContext, "开柜异常：" + e.getMessage());
+                }
+
+            }
+        });
 
         if (strs[1].length() == 1) {
             strs[1] = "0" + strs[1];
@@ -150,6 +191,12 @@ public class ManagerReceiveActivity extends BaseActivity {
         cabinetInfoAdapter.notifyDataSetChanged();
     }
 
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+        }
+    };
     private void showNoticeDialog(String info) {
         final Dialog dialog = new Dialog(mContext, R.style.TransparentDialogStyle);
         dialog.setCanceledOnTouchOutside(true);

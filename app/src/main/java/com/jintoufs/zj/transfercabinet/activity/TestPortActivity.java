@@ -63,19 +63,19 @@ public class TestPortActivity extends SerialPortActivity {
 //                }else {
 //                    Logger.i("bitmap 为 null");
 //                }
-                String mSavePath = Environment.getExternalStorageDirectory() + "/" + "transfercabinet";
-                File file = new File(mSavePath);
-                if (!file.exists()) {
-                    file.mkdir();
-                }
-                File imgFile = new File(file, "ddd.jpg");
-                String path = imgFile.getAbsolutePath();
-                byte2image(buffer, path);
-                Logger.i("文件长度：" + imgFile.length());
-//                Bitmap bitmap = BitmapFactory.decodeFile(path);
-                Drawable drawable = BitmapDrawable.createFromPath(path);
-                Logger.i("文件路径：" + path);
-                iv_image.setImageDrawable(drawable);
+//                String mSavePath = Environment.getExternalStorageDirectory() + "/" + "transfercabinet";
+//                File file = new File(mSavePath);
+//                if (!file.exists()) {
+//                    file.mkdir();
+//                }
+//                File imgFile = new File(file, "ddd.jpg");
+//                String path = imgFile.getAbsolutePath();
+//                byte2image(buffer, path);
+//                Logger.i("文件长度：" + imgFile.length());
+////                Bitmap bitmap = BitmapFactory.decodeFile(path);
+//                Drawable drawable = BitmapDrawable.createFromPath(path);
+//                Logger.i("文件路径：" + path);
+//                iv_image.setImageDrawable(drawable);
 //                if (bitmap != null) {
 //                    Logger.i("bitmap 不为 null");
 //                    iv_image.setImageBitmap(bitmap);

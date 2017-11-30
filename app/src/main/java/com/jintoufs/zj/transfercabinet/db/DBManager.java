@@ -3,9 +3,18 @@ package com.jintoufs.zj.transfercabinet.db;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.jintoufs.zj.transfercabinet.config.AppConstant;
+import com.jintoufs.zj.transfercabinet.model.CabinetModel;
+import com.jintoufs.zj.transfercabinet.util.SharedPreferencesHelper;
+import com.orhanobut.logger.Logger;
+
 import org.greenrobot.greendao.query.QueryBuilder;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by zj on 2017/11/6.
@@ -16,10 +25,14 @@ public class DBManager {
     private static DBManager mInstance;
     private DaoMaster.DevOpenHelper openHelper;
     private Context context;
+    private ExecutorService threadPool;//线程池
+    private SharedPreferencesHelper sharedPreferencesHelper;
 
     private DBManager(Context context) {
         this.context = context;
         openHelper = new DaoMaster.DevOpenHelper(context, dbName, null);
+        threadPool = Executors.newCachedThreadPool();
+        sharedPreferencesHelper = new SharedPreferencesHelper(context);
     }
 
     public static DBManager getInstance(Context context) {
@@ -139,11 +152,51 @@ public class DBManager {
      *
      * @return
      */
-    public CabinetInfo queryEmptyCabinet() {
-        List<CabinetInfo> cabinetInfoList = queryAllEmptyCabinet();
-        if (cabinetInfoList != null && cabinetInfoList.size() > 0)
-            return cabinetInfoList.get(0);
-        else return null;
+    private List<CabinetInfo> emptyCabinetInfoList;
+    private Socket socket;
+    private CabinetInfo cabinetInfo;
+
+    public CabinetInfo openAEmptyCabinet() {
+        emptyCabinetInfoList = queryAllEmptyCabinet();
+        if (emptyCabinetInfoList != null && emptyCabinetInfoList.size() > 0) {
+            final String ipAdress = (String) sharedPreferencesHelper.get("IpAddress", null);
+            if (ipAdress == null) return null;
+            threadPool.execute(new Runnable() {
+                @Override
+                public void run() {
+                    int count = emptyCabinetInfoList.size();
+                    for (int i = 0; i < count; i++) {
+                        CabinetInfo tempCabinetInfo = emptyCabinetInfoList.get(i);
+                        //交接柜的编号+柜子的行列号（xxxxxxxxxxx,xx,xx）
+                        String str = tempCabinetInfo.getCabinetNumber();
+                        String strs[] = str.split(",");
+                        if (strs.length != 3) return;
+                        String row = strs[1];
+                        String col = strs[2];
+                        try {
+                            if (socket == null) socket = new Socket(ipAdress, AppConstant.PORT);
+                            int number = 0;
+                            boolean isOpen = false;
+                            while (!isOpen && number != 5) {
+                                CabinetModel.openDrawer(socket, row, col);
+                                Thread.sleep(500);
+                                isOpen = CabinetModel.isOpen(socket, row, col);
+                                number++;
+                            }
+                            if (isOpen) {
+                                cabinetInfo = emptyCabinetInfoList.get(i);
+                                return;
+                            }
+                            Thread.sleep(1000);
+                        } catch (Exception e) {
+                            Logger.i("开空柜子 " + row + "|" + col + " 异常：" + e.getMessage());
+                        }
+                    }
+                }
+            });
+            return cabinetInfo;
+        } else
+            return null;
     }
 
     /**
@@ -169,5 +222,18 @@ public class DBManager {
         List<CabinetInfo> cabinetInfoList = queryBuilder.list();
         return cabinetInfoList;
     }
+
+    /**
+     * 释放线程池和socket占用的资源
+     */
+    public void releaseThreadPool() throws IOException {
+        if (threadPool != null) {
+            threadPool.shutdown();
+        }
+        if (socket != null) {
+            socket.close();
+        }
+    }
+
 
 }

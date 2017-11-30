@@ -5,14 +5,12 @@ import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.MemoryCategory;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.model.bean.CertificateVo;
-import com.jintoufs.zj.transfercabinet.model.bean.Paperwork;
 import com.jintoufs.zj.transfercabinet.util.Base64Util;
 
 import java.util.List;
@@ -24,6 +22,11 @@ import java.util.List;
 public class PaperworkAdapter extends RecyclerView.Adapter<PaperworkAdapter.PWHolder> {
     private Context mContext;
     private List<CertificateVo> paperworkList;
+    private ReEnterClickListener reEnterClickListener;
+    private OpenCabinetClickListener openCabinetClickListener;
+    private CloseCabinetClickListener closeCabinetClickListener;
+    private PWHolder tempHolder;
+
 
     public PaperworkAdapter(Context mContext, List<CertificateVo> paperworkList) {
         this.mContext = mContext;
@@ -36,19 +39,50 @@ public class PaperworkAdapter extends RecyclerView.Adapter<PaperworkAdapter.PWHo
     }
 
     @Override
-    public void onBindViewHolder(PWHolder holder, int position) {
+    public void onBindViewHolder(final PWHolder holder, final int position) {
         CertificateVo paperwork = paperworkList.get(position);
         holder.tv_context.setText("姓名：" + paperwork.getUserName() + "      性别：" + paperwork.getSex() + "      出生日期：" + paperwork.getBornDate() +
                 "      民族：" + paperwork.getNation() + "\n身份证号：" + paperwork.getIdCard() + "      联系电话：" + paperwork.getPhone() +
                 "\n证件类型：" + paperwork.getType() + "      证件号：" + paperwork.getNumber() +
                 "\n所属机构：" + paperwork.getOrgName());
         Bitmap bitmap = Base64Util.stringtoBitmap(paperwork.getImage());
-        if (bitmap != null){
+        if (bitmap != null) {
             holder.image.setImageBitmap(bitmap);
-        }else {
+        } else {
             holder.image.setImageResource(R.mipmap.empty_img);
         }
 //        Glide.with(mContext).load(bitmap).centerCrop().placeholder(R.mipmap.empty_img).into(holder.image);
+
+        holder.btn_re.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (reEnterClickListener != null) {
+                    reEnterClickListener.reEnter(position);
+                }
+            }
+        });
+        holder.btn_save.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tempHolder = holder;
+                if (openCabinetClickListener != null) {
+                    openCabinetClickListener.openCabinet(position);
+                }
+            }
+        });
+        holder.btn_close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (closeCabinetClickListener != null) {
+                    closeCabinetClickListener.closeCabinet(position);
+                }
+            }
+        });
+    }
+
+    public void surePaperWorkToSave() {
+        tempHolder.btn_save.setVisibility(View.GONE);
+        tempHolder.btn_close.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -56,14 +90,44 @@ public class PaperworkAdapter extends RecyclerView.Adapter<PaperworkAdapter.PWHo
         return paperworkList.size();
     }
 
+    public interface ReEnterClickListener {
+        void reEnter(int position);
+    }
+
+    public interface OpenCabinetClickListener {
+        void openCabinet(int position);
+    }
+
+    public interface CloseCabinetClickListener {
+        void closeCabinet(int position);
+    }
+
+    public void setReEnterClickListener(ReEnterClickListener reEnterClickListener) {
+        this.reEnterClickListener = reEnterClickListener;
+    }
+
+    public void setOpenCabinetClickListener(OpenCabinetClickListener openCabinetClickListener) {
+        this.openCabinetClickListener = openCabinetClickListener;
+    }
+
+    public void setCloseCabinetClickListener(CloseCabinetClickListener closeCabinetClickListener) {
+        this.closeCabinetClickListener = closeCabinetClickListener;
+    }
+
     class PWHolder extends RecyclerView.ViewHolder {
         TextView tv_context;
         ImageView image;
+        Button btn_save;
+        Button btn_re;
+        Button btn_close;
 
         public PWHolder(View itemView) {
             super(itemView);
             tv_context = (TextView) itemView.findViewById(R.id.tv_context);
             image = (ImageView) itemView.findViewById(R.id.image);
+            btn_save = (Button) itemView.findViewById(R.id.btn_save);
+            btn_re = (Button) itemView.findViewById(R.id.btn_re);
+            btn_close = (Button) itemView.findViewById(R.id.btn_close);
         }
     }
 }

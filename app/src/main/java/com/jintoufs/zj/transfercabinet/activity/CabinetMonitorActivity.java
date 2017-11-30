@@ -88,7 +88,7 @@ public class CabinetMonitorActivity extends BaseActivity {
 
     private String IPAddress;//交接柜IP
     private CabinetModel cabinetModel;
-    private ExecutorService threadPool;//单任务线程池
+    private ExecutorService threadPool;//线程池
     private Socket socket;
     private String row;//柜子的行
     private String col;//柜子的列
@@ -331,9 +331,9 @@ public class CabinetMonitorActivity extends BaseActivity {
                     drawerAdapter.notifyDataSetChanged();
                     break;
                 case 2://对全部柜子开操作过程中...
-                   boolean isOpen2 = (boolean) msg.obj;
-                    Logger.i("handler： 行："+drawer.getRaw()+"  isOpen:"+isOpen2);
-                    if (!isOpen2){
+                    boolean isOpen2 = (boolean) msg.obj;
+                    Logger.i("handler： 行：" + drawer.getRaw() + "  isOpen:" + isOpen2);
+                    if (!isOpen2) {
                         isAll = false;
                     }
                     drawer.setOpen(isOpen2);
@@ -345,15 +345,15 @@ public class CabinetMonitorActivity extends BaseActivity {
                     }
                     isAllOpen = true;
                     btnOpenAll.setText("关闭所有柜子");
-                    if (!isAll){
-                        ToastUtils.showLongToast(mContext,"提示：有未正常打开的柜子，请检查故障！");
-                    }else {
-                        ToastUtils.showLongToast(mContext,"全部柜子已打开！");
+                    if (!isAll) {
+                        ToastUtils.showLongToast(mContext, "提示：有未正常打开的柜子，请检查故障！");
+                    } else {
+                        ToastUtils.showLongToast(mContext, "全部柜子已打开！");
                     }
                     break;
                 case 4://对全部柜子关操作过程中...
                     boolean isOpen4 = (boolean) msg.obj;
-                    if (!isOpen4){
+                    if (!isOpen4) {
                         isFinish = false;
                     }
                     drawer.setOpen(isOpen4);
@@ -365,10 +365,10 @@ public class CabinetMonitorActivity extends BaseActivity {
                     }
                     isAllOpen = false;
                     btnOpenAll.setText("打开所有柜子");
-                    if (isFinish){
-                        ToastUtils.showLongToast(mContext,"全部柜子已关闭！");
-                    }else {
-                        ToastUtils.showLongToast(mContext,"提示：有未正常关闭的柜子，请检查故障！");
+                    if (isFinish) {
+                        ToastUtils.showLongToast(mContext, "全部柜子已关闭！");
+                    } else {
+                        ToastUtils.showLongToast(mContext, "提示：有未正常关闭的柜子，请检查故障！");
                     }
                     break;
                 default:
@@ -453,28 +453,28 @@ public class CabinetMonitorActivity extends BaseActivity {
                                 if (col.length() == 1) {
                                     col = "0" + col;
                                 }
-                                    try {
-                                        if (socket == null)
-                                            socket = new Socket(IPAddress, AppConstant.PORT);
+                                try {
+                                    if (socket == null)
+                                        socket = new Socket(IPAddress, AppConstant.PORT);
 
-                                        tryCount = 0;
-                                        while (!isSingleOpen && tryCount != 5) {
-                                            CabinetModel.openDrawer(socket, row, col);
-                                            Thread.sleep(1000);
-                                            isSingleOpen = CabinetModel.isOpen(socket, row, col);
-                                            tryCount++;
-                                        }
-                                        Logger.i("行："+drawer.getRaw()+"  isOpen:"+isSingleOpen);
-                                        Message message= Message.obtain();
-                                        message.obj = isSingleOpen;
-                                        message.what = 2;
-                                        mHandler.sendMessage(message);
-
-                                        Thread.sleep(1000);//休眠1秒，让线程有足够时间处理逻辑
-                                    } catch (Exception e) {
-                                        Logger.i("异常：" + e.getClass().getName());
-                                        e.printStackTrace();
+                                    tryCount = 0;
+                                    while (!isSingleOpen && tryCount != 5) {
+                                        CabinetModel.openDrawer(socket, row, col);
+                                        Thread.sleep(1000);
+                                        isSingleOpen = CabinetModel.isOpen(socket, row, col);
+                                        tryCount++;
                                     }
+                                    Logger.i("行：" + drawer.getRaw() + "  isOpen:" + isSingleOpen);
+                                    Message message = Message.obtain();
+                                    message.obj = isSingleOpen;
+                                    message.what = 2;
+                                    mHandler.sendMessage(message);
+
+                                    Thread.sleep(1000);//休眠1秒，让线程有足够时间处理逻辑
+                                } catch (Exception e) {
+                                    Logger.i("异常：" + e.getClass().getName());
+                                    e.printStackTrace();
+                                }
                             }
                             //完成
                             Message message = Message.obtain();
@@ -483,12 +483,6 @@ public class CabinetMonitorActivity extends BaseActivity {
                         }
                     });
                 } else {//执行全关操作
-//                    Logger.i("长度：" + drawerList.size());
-//                    for (int i = 0; i < drawerList.size(); i++) {
-//                        drawer = drawerList.get(i);
-//                        isSingleOpen = drawer.isOpen();
-//                        Logger.i("是否开启：" + isSingleOpen);
-//                    }
                     if (waitDialog == null) {
                         waitDialog = getWaitDialog(mContext, "柜子正在依次关闭...");
                         waitDialog.show();
@@ -568,6 +562,20 @@ public class CabinetMonitorActivity extends BaseActivity {
         });
         window.setContentView(view);
         dialog.show();
+    }
+
+    @Override
+    protected void onStop() {
+        if (threadPool != null)
+            threadPool.shutdown();
+        if (socket != null) {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        super.onStop();
     }
 
     @Override

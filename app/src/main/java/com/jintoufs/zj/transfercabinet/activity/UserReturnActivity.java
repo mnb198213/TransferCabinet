@@ -19,21 +19,28 @@ import com.baselib.http.util.GsonHelper;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.adapter.ExampleImgAdapetr;
 import com.jintoufs.zj.transfercabinet.adapter.PaperworkAdapter;
+import com.jintoufs.zj.transfercabinet.config.AppConstant;
 import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
 import com.jintoufs.zj.transfercabinet.db.DBManager;
+import com.jintoufs.zj.transfercabinet.model.CabinetModel;
 import com.jintoufs.zj.transfercabinet.model.bean.CertificateVo;
 import com.jintoufs.zj.transfercabinet.model.bean.PoVo;
 import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
 import com.jintoufs.zj.transfercabinet.net.NetService;
 import com.jintoufs.zj.transfercabinet.util.DensityUtil;
+import com.jintoufs.zj.transfercabinet.util.SharedPreferencesHelper;
 import com.jintoufs.zj.transfercabinet.util.TimeUtil;
 import com.jintoufs.zj.transfercabinet.widget.SpaceItemLeftDecoration;
 import com.jintoufs.zj.transfercabinet.widget.SpaceItemTopDecoration;
 import com.orhanobut.logger.Logger;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -71,9 +78,94 @@ public class UserReturnActivity extends BaseActivity {
     private boolean isAction = false;
     private List<PoVo> poVoList;
     private DBManager dbManager;
+    private ExecutorService threadPool;//线程池
+    private Socket socket;
+    private SharedPreferencesHelper sharedPreferencesHelper;
+    private String IPAddress;//交接柜IP
+    private String col, row;
+    private CabinetInfo cabinetInfo;//当前操作的柜子
 
     private ExampleImgAdapetr exampleImgAdapetr;
     private int[] imgs = {R.mipmap.empty_img, R.mipmap.empty_img, R.mipmap.empty_img, R.mipmap.empty_img};
+
+    @Override
+    public void initData() {
+        super.initData();
+        mContext = this;
+        dbManager = DBManager.getInstance(this);
+        sharedPreferencesHelper = new SharedPreferencesHelper(this);
+        IPAddress = (String) sharedPreferencesHelper.get("IpAddress", null);
+
+        paperworkList = new ArrayList<>();
+        paperworkAdapter = new PaperworkAdapter(this, paperworkList);
+        paperworkAdapter.setOpenCabinetClickListener(new PaperworkAdapter.OpenCabinetClickListener() {
+            @Override
+            public void openCabinet(final int position) {
+                if (cabinetInfo != null) {
+                    cabinetInfo = null;
+                }
+                //不考虑人手动关闭柜子
+                cabinetInfo = dbManager.openAEmptyCabinet();//打开一个空柜子
+                if (cabinetInfo == null) {
+                    ToastUtils.showLongToast(mContext, "抱歉，当前没有可用的空柜！");
+                    return;
+                }
+
+                paperworkAdapter.surePaperWorkToSave();
+            }
+        });
+        paperworkAdapter.setReEnterClickListener(new PaperworkAdapter.ReEnterClickListener() {
+            @Override
+            public void reEnter(int position) {
+                cabinetInfo = null;
+                paperworkList.remove(position);
+                paperworkAdapter.notifyDataSetChanged();
+            }
+        });
+        paperworkAdapter.setCloseCabinetClickListener(new PaperworkAdapter.CloseCabinetClickListener() {
+            @Override
+            public void closeCabinet(final int position) {
+                //关闭已经打开的柜子
+                String cabinetNumber = cabinetInfo.getCabinetNumber();
+                String[] strs = cabinetNumber.split(",");
+                if (strs.length != 3) {
+                    return;
+                }
+                row = strs[1];
+                col = strs[2];
+
+                threadPool.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (socket == null) socket = new Socket(IPAddress, AppConstant.PORT);
+                            int count = 0;
+                            boolean isOpen = true;
+                            while (isOpen && count != 5) {
+                                CabinetModel.closeDrawer(socket, row, col);
+                                Thread.sleep(500);
+                                isOpen = CabinetModel.isOpen(socket, row, col);
+                                count++;
+                            }
+                            Message message = Message.obtain();
+                            message.what = 2;
+                            message.obj = isOpen;
+                            message.arg1 = position;
+                            mHandler.sendMessage(message);
+
+                        } catch (Exception e) {
+                            Logger.i("关柜异常：" + e.getMessage());
+                        }
+                    }
+                });
+            }
+        });
+
+        exampleImgAdapetr = new ExampleImgAdapetr(this, imgs);
+
+        poVoList = new ArrayList<>();
+        threadPool = Executors.newCachedThreadPool();
+    }
 
     private Handler mHandler = new Handler() {
         @Override
@@ -82,24 +174,40 @@ public class UserReturnActivity extends BaseActivity {
                 String time = TimeUtil.DateToString(new Date());
                 if (tvTime != null)
                     tvTime.setText("当前时间：" + time);
+            } else if (msg.what == 2) {
+                boolean isOpen = (boolean) msg.obj;
+                if (!isOpen) {//正常关闭
+                    //更新本地柜子信息
+                    int position = msg.arg1;
+                    CertificateVo certificateVo = paperworkList.get(position);
+                    cabinetInfo.setUserIdCard(certificateVo.getIdCard());
+                    cabinetInfo.setPaperworkId(certificateVo.getNumber());
+                    cabinetInfo.setDepartment(certificateVo.getOrgName());
+                    cabinetInfo.setType(certificateVo.getType());
+                    cabinetInfo.setUsername(certificateVo.getUserName());
+                    dbManager.updateCabinetInfo(cabinetInfo);
+
+                    String cabinetNumber = cabinetInfo.getCabinetNumber();
+                    String[] strs = cabinetNumber.split(",");
+                    //生成一条开柜子的记录
+                    PoVo poVo = new PoVo();
+                    poVo.setCabinetSerialNo(strs[0]);
+                    if (row.length() == 1)
+                        row = "0" + strs[1];
+                    if (col.length() == 1)
+                        col = "0" + strs[2];
+                    poVo.setLocationCode(row + col);
+                    poVo.setNumber(cabinetInfo.getPaperworkId());
+                    poVoList.add(poVo);
+                    //标识有开箱记录，需要提交记录
+                    isAction = true;
+                    btnFinish.setVisibility(View.VISIBLE);
+                } else {
+                    ToastUtils.showLongToast(mContext, "柜子不能正常关闭，请换其他柜子存证");
+                }
             }
-            super.handleMessage(msg);
         }
     };
-
-    @Override
-    public void initData() {
-        super.initData();
-        mContext = this;
-        dbManager = DBManager.getInstance(this);
-        paperworkList = new ArrayList<>();
-
-        paperworkAdapter = new PaperworkAdapter(this, paperworkList);
-
-        exampleImgAdapetr = new ExampleImgAdapetr(this, imgs);
-
-        poVoList = new ArrayList<>();
-    }
 
     @Override
     public void initView() {
@@ -193,38 +301,6 @@ public class UserReturnActivity extends BaseActivity {
                                     ToastUtils.showLongToast(mContext, "证件信息加载出错");
                                     return;
                                 }
-                                CabinetInfo cabinetInfo = dbManager.queryEmptyCabinet();
-                                if (cabinetInfo == null) {
-                                    ToastUtils.showLongToast(mContext, "抱歉，当前没有空柜可用！");
-                                    return;
-                                }
-                                String cabinetNumber = cabinetInfo.getCabinetNumber();
-                                String[] strs = cabinetNumber.split(",");
-                                String row = strs[1];
-                                String col = strs[2];
-                                //打开柜子，放入证件，关上柜子
-                                //、、、、、、、、、、、、、、、、、、、、
-                                //、、、、、、、、、、、、、、、、、、
-
-                                cabinetInfo.setUserIdCard(certificateVo.getIdCard());
-                                cabinetInfo.setPaperworkId(certificateVo.getNumber());
-                                cabinetInfo.setDepartment(certificateVo.getOrgName());
-                                cabinetInfo.setType(certificateVo.getType());
-                                cabinetInfo.setUsername(certificateVo.getUserName());
-                                dbManager.updateCabinetInfo(cabinetInfo);
-
-                                PoVo poVo = new PoVo();
-                                poVo.setCabinetSerialNo(strs[0]);
-                                if (row.length() == 1)
-                                    row = "0" + strs[1];
-                                if (col.length() == 1)
-                                    col = "0" + strs[2];
-                                poVo.setLocationCode(row + col);
-                                poVo.setNumber(cabinetInfo.getPaperworkId());
-                                poVoList.add(poVo);
-
-                                isAction = true;
-                                btnFinish.setVisibility(View.VISIBLE);
                                 paperworkList.add(certificateVo);
                                 paperworkAdapter.notifyDataSetChanged();
                                 dialog.dismiss();
@@ -263,6 +339,20 @@ public class UserReturnActivity extends BaseActivity {
                 }
             } while (true);
         }
+    }
+
+    @Override
+    protected void onStop() {
+        if (threadPool != null)
+            threadPool.shutdown();
+        if (socket != null) {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        super.onStop();
     }
 
     @Override

@@ -46,16 +46,16 @@ public class DrawerAdapter extends RecyclerView.Adapter<DrawerAdapter.DrawHolder
         Drawer drawer = drawerList.get(position);
         String statue = drawer.getState();
         if (statue.equals("0") && !isSelected.get(position) && !drawer.isOpen()) {//空柜子,未选中，未打开
-            holder.tv_name.setText(drawer.getName());
+            holder.tv_name.setText("未使用");
             holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.null_color));
         } else if (statue.equals("0") && isSelected.get(position) && !drawer.isOpen()) {//空柜子,已选中，未打开
-            holder.tv_name.setText(drawer.getName());
+            holder.tv_name.setText("未使用");
             holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.selected_color));
         } else if (statue.equals("0") && !isSelected.get(position) && drawer.isOpen()) {//空柜子,未选中，已打开
-            holder.tv_name.setText(drawer.getName());
+            holder.tv_name.setText("未使用");
             holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.opened_color));
         } else if (statue.equals("0") && isSelected.get(position) && drawer.isOpen()) {//空箱子，已选中，已打开
-            holder.tv_name.setText(drawer.getName());
+            holder.tv_name.setText("未使用");
             holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.selected_color));
         } else if (statue.equals("1") && !isSelected.get(position) && !drawer.isOpen()) {//已使用的柜子,未选中，未打开
             holder.tv_name.setBackgroundColor(mContext.getResources().getColor(R.color.saved_color));

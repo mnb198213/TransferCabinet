@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/BaseLib2/BaseLib2.iml" filepath="$PROJECT_DIR$/BaseLib2/BaseLib2.iml" />
       <module fileurl="file://$PROJECT_DIR$/TransferCabinet.iml" filepath="$PROJECT_DIR$/TransferCabinet.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hedc_usb_com/hedc_usb_com.iml" filepath="$PROJECT_DIR$/hedc_usb_com/hedc_usb_com.iml" />
     </modules>
   </component>
 </project>

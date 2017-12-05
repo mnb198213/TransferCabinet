@@ -20,6 +20,7 @@ public class CabinetInfoBeanModel {
 
     /**
      * 保存一个CabinetInfoBean对象
+     *
      * @param cabinetInfoBean
      */
     public void saveCabinetInfoBeanBySP(CabinetInfoBean cabinetInfoBean) {
@@ -38,6 +39,7 @@ public class CabinetInfoBeanModel {
 
     /**
      * 从缓存中获取一个CabinetInfoBean对象
+     *
      * @return
      */
     public CabinetInfoBean getCabinetInfoBean() {
@@ -49,6 +51,7 @@ public class CabinetInfoBeanModel {
         cabinetInfoBean.setLocation((String) sharedPreferencesHelper.get("Location", null));
         cabinetInfoBean.setName((String) sharedPreferencesHelper.get("Name", null));
         cabinetInfoBean.setOrgName((String) sharedPreferencesHelper.get("OrgName", null));
+        cabinetInfoBean.setSerialNo((String) sharedPreferencesHelper.get("SerialNo", null));
         return cabinetInfoBean;
     }
 

@@ -22,6 +22,7 @@ import com.jintoufs.zj.transfercabinet.adapter.PaperworkAdapter;
 import com.jintoufs.zj.transfercabinet.config.AppConstant;
 import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
 import com.jintoufs.zj.transfercabinet.db.DBManager;
+import com.jintoufs.zj.transfercabinet.dialog.WaitDialog;
 import com.jintoufs.zj.transfercabinet.model.CabinetModel;
 import com.jintoufs.zj.transfercabinet.model.bean.CertificateVo;
 import com.jintoufs.zj.transfercabinet.model.bean.PoVo;
@@ -40,11 +41,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import honeywell.hedc_usb_com.HEDCUsbCom;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -54,7 +57,9 @@ import retrofit2.Response;
  * Created by zj on 2017/9/6.
  */
 
-public class ManagerCastActivity extends AppCompatActivity {
+public class ManagerCastActivity extends AppCompatActivity implements HEDCUsbCom.OnConnectionStateListener,
+        HEDCUsbCom.OnBarcodeListener, HEDCUsbCom.OnImageListener,
+        HEDCUsbCom.OnDownloadListener {
 
 
     @BindView(R.id.tv_statue)
@@ -83,6 +88,11 @@ public class ManagerCastActivity extends AppCompatActivity {
     private ExecutorService threadPool;//线程池
     private Socket socket;
     private SharedPreferencesHelper sharedPreferencesHelper;
+    private WaitDialog waitDialog;
+
+    private HEDCUsbCom m_engine;
+
+    private List<CabinetInfo> emptyCabinetInfoList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,8 +101,16 @@ public class ManagerCastActivity extends AppCompatActivity {
         unbinder = ButterKnife.bind(this);
         mContext = this;
         dbManager = DBManager.getInstance(this);
+        threadPool = Executors.newCachedThreadPool();
+        m_engine = new HEDCUsbCom(this, this, this, this, this);
+
+        waitDialog = new WaitDialog(this);
         sharedPreferencesHelper = new SharedPreferencesHelper(this);
         IPAddress = (String) sharedPreferencesHelper.get("IpAddress", null);
+        if (IPAddress == null) {
+            ToastUtils.showShortToast(mContext, "交接柜信息异常！");
+            return;
+        }
         user = getIntent().getParcelableExtra("User");
         if (user == null) {
             ToastUtils.showShortToast(mContext, "user == null");
@@ -107,13 +125,52 @@ public class ManagerCastActivity extends AppCompatActivity {
                 if (cabinetInfo != null) {
                     cabinetInfo = null;
                 }
-                //不考虑人手动关闭柜子
-                cabinetInfo = dbManager.openAEmptyCabinet();//打开一个空柜子
-                if (cabinetInfo == null) {
-                    ToastUtils.showLongToast(mContext, "抱歉，当前没有可用的空柜！");
-                    return;
-                }
+                waitDialog.show(mContext, "柜子正在打开...");
+                emptyCabinetInfoList = dbManager.queryAllEmptyCabinet();
+                if (emptyCabinetInfoList != null && emptyCabinetInfoList.size() > 0) {
+                    threadPool.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            int count = emptyCabinetInfoList.size();
+                            boolean isOpen = false;
+                            for (int i = 0; i < count; i++) {
+                                CabinetInfo tempCabinetInfo = emptyCabinetInfoList.get(i);
+                                //交接柜的编号+柜子的行列号（xxxxxxxxxxx,xx,xx）
+                                String str = tempCabinetInfo.getCabinetNumber();
+                                String strs[] = str.split(",");
+                                if (strs.length != 3) return;
+                                String row = strs[1];
+                                String col = strs[2];
+                                try {
+                                    if (socket == null)
+                                        socket = new Socket(IPAddress, AppConstant.PORT);
+                                    int number = 0;
+                                    while (!isOpen && number != 5) {
+                                        CabinetModel.openDrawer(socket, row, col);
+                                        Thread.sleep(500);
+                                        isOpen = CabinetModel.isOpen(socket, row, col);
+                                        number++;
+                                    }
+                                    //打开了一个柜子
+                                    if (isOpen) {
+                                        cabinetInfo = emptyCabinetInfoList.get(i);
+                                        break;
+                                    }
+                                    Thread.sleep(1000);
 
+                                } catch (Exception e) {
+                                    Logger.i("开空柜子 " + row + "|" + col + " 异常：" + e.getMessage());
+                                }
+                            }
+                            Message message = Message.obtain();
+                            message.obj = isOpen;
+                            message.what = 3;
+                            mHandler.sendMessage(message);
+                        }
+                    });
+                } else {
+                    ToastUtils.showLongToast(mContext, "抱歉，当前没有可用的空柜！");
+                }
                 paperworkAdapter.surePaperWorkToSave();
             }
         });
@@ -181,7 +238,7 @@ public class ManagerCastActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.btn_hand_do:
-                showInputPaperworkId("证件号：");
+                showInputTypeDialog();
                 break;
             case R.id.btn_finish:
                 btnFinish.setVisibility(View.INVISIBLE);
@@ -241,9 +298,55 @@ public class ManagerCastActivity extends AppCompatActivity {
                 } else {
                     ToastUtils.showLongToast(mContext, "柜子不能正常关闭，请换其他柜子存证");
                 }
+            } else if (msg.what == 1) {
+                loadPaperworkInfo(paperworkId);
+            } else if (msg.what == 3) {
+                waitDialog.dismiss();
+                boolean isOpen = (boolean) msg.obj;
+                if (!isOpen) {
+                    ToastUtils.showLongToast(mContext, "抱歉，当前没有可用的空柜！");
+                }
+            } else if (msg.what == 4) {
+                ToastUtils.showLongToast(mContext, "获取的证件号不正确，请重新扫描");
             }
         }
     };
+
+    private void showInputTypeDialog() {
+        final Dialog dialog = new Dialog(this, R.style.TransparentDialogStyle);
+        dialog.setCanceledOnTouchOutside(false);
+        Window window = dialog.getWindow();
+        View view = View.inflate(mContext, R.layout.dialog_input_type_view, null);
+        Button btn_sao = (Button) view.findViewById(R.id.btn_sao);
+        Button btn_hand_do = (Button) view.findViewById(R.id.btn_hand_do);
+        Button btn_cancel = (Button) view.findViewById(R.id.btn_cancel);
+        btn_sao.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                if (isConnnection) {
+                    m_engine.StartReadingSession();
+                } else {
+                    ToastUtils.showLongToast(mContext, "扫描仪连接异常");
+                }
+            }
+        });
+        btn_hand_do.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                showInputPaperworkId("证件号：");
+            }
+        });
+        btn_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        window.setContentView(view);
+        dialog.show();
+    }
 
     private void showInputPaperworkId(String info) {
         final Dialog dialog = new Dialog(this, R.style.TransparentDialogStyle);
@@ -264,45 +367,53 @@ public class ManagerCastActivity extends AppCompatActivity {
         btn_sure.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                dialog.dismiss();
+                paperworkId = null;
                 paperworkId = et_input.getText().toString().trim();
                 if (TextUtils.isEmpty(paperworkId)) {
                     ToastUtils.showShortToast(mContext, "证件号不能为空");
                     return;
                 }
-                Call<ResponseInfo<CertificateVo>> call = NetService.getApiService().getCertificateByNumber(paperworkId);
-                call.enqueue(new Callback<ResponseInfo<CertificateVo>>() {
-                    @Override
-                    public void onResponse(Call<ResponseInfo<CertificateVo>> call, Response<ResponseInfo<CertificateVo>> response) {
-                        if (response.body() != null) {
-                            ResponseInfo<CertificateVo> responseInfo = response.body();
-                            if ("200".equals(responseInfo.getCode())) {
-                                CertificateVo certificateVo = response.body().getData();
-                                if (certificateVo == null) {
-                                    ToastUtils.showLongToast(mContext, "证件信息加载出错");
-                                    return;
-                                }
-                                paperworkList.add(certificateVo);
-                                paperworkAdapter.notifyDataSetChanged();
-                                dialog.dismiss();
-                            } else {
-                                Logger.i("请求码：" + responseInfo.getCode() + responseInfo.getMsg());
-                                ToastUtils.showLongToast(mContext, responseInfo.getMsg());
-                            }
-                        } else {
-                            Logger.i("response.body() == null");
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<ResponseInfo<CertificateVo>> call, Throwable t) {
-                        Logger.i("url:" + call.request().url() + "  error:" + t.getMessage());
-                        ToastUtils.showShortToast(mContext, "error:" + t.getMessage());
-                    }
-                });
+                loadPaperworkInfo(paperworkId);
             }
         });
         window.setContentView(view);
         dialog.show();
+    }
+
+    private void loadPaperworkInfo(String paperworkId) {
+        waitDialog.show(mContext, "正在查询证件，请等待...");
+        Call<ResponseInfo<CertificateVo>> call = NetService.getApiService().getCertificateByNumber(paperworkId);
+        call.enqueue(new Callback<ResponseInfo<CertificateVo>>() {
+            @Override
+            public void onResponse(Call<ResponseInfo<CertificateVo>> call, Response<ResponseInfo<CertificateVo>> response) {
+                waitDialog.dismiss();
+                if (response.body() != null) {
+                    ResponseInfo<CertificateVo> responseInfo = response.body();
+                    if ("200".equals(responseInfo.getCode())) {
+                        CertificateVo certificateVo = response.body().getData();
+                        if (certificateVo == null) {
+                            ToastUtils.showLongToast(mContext, "证件信息加载出错");
+                            return;
+                        }
+                        paperworkList.add(certificateVo);
+                        paperworkAdapter.notifyDataSetChanged();
+                    } else {
+                        Logger.i("请求码：" + responseInfo.getCode() + responseInfo.getMsg());
+                        ToastUtils.showLongToast(mContext, responseInfo.getMsg());
+                    }
+                } else {
+                    Logger.i("response.body() == null");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseInfo<CertificateVo>> call, Throwable t) {
+                waitDialog.dismiss();
+                Logger.i("url:" + call.request().url() + "  error:" + t.getMessage());
+                ToastUtils.showShortToast(mContext, "error:" + t.getMessage());
+            }
+        });
     }
 
     @Override
@@ -316,6 +427,9 @@ public class ManagerCastActivity extends AppCompatActivity {
         }
         if (threadPool != null)
             threadPool.shutdown();
+        if (isConnnection){
+            m_engine.StopReadingSession();
+        }
         super.onStop();
     }
 
@@ -326,5 +440,60 @@ public class ManagerCastActivity extends AppCompatActivity {
         }
 
         super.onDestroy();
+    }
+
+    private String[] AsciiTab = {
+            "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF", "VT",
+            "FF", "CR", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB",
+            "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US", "SP", "DEL",
+    };
+    private boolean isConnnection = false;
+
+    public String ConvertToString(byte[] data, int length) {
+        String s = "";
+        String s_final = "";
+        for (int i = 0; i < length; i++) {
+            if ((data[i] >= 0) && (data[i] < 0x20)) {
+                s = String.format("<%s>", AsciiTab[data[i]]);
+            } else if (data[i] >= 0x7F) {
+                s = String.format("<0x%02X>", data[i]);
+            } else {
+                s = String.format("%c", data[i] & 0xFF);
+            }
+            s_final += s;
+        }
+
+        return s_final;
+    }
+
+    @Override
+    public void OnBarcodeData(byte[] bytes, int i) {
+        String result = ConvertToString(bytes, i);
+        if (result != null && result.length() > 9) {
+            paperworkId = null;
+            paperworkId = result.substring(0, 9);
+            mHandler.sendEmptyMessage(1);
+        } else {
+            mHandler.sendEmptyMessage(4);
+        }
+    }
+
+    @Override
+    public void OnConnectionStateEvent(HEDCUsbCom.ConnectionState connectionState) {
+        if (connectionState == HEDCUsbCom.ConnectionState.Connected) {
+            isConnnection = true;
+        } else {
+            isConnnection = false;
+        }
+    }
+
+    @Override
+    public void OnDownloadData(int i, short i1) {
+
+    }
+
+    @Override
+    public void OnImageData(byte[] bytes, int i) {
+
     }
 }

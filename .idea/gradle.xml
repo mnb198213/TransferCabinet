@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$/BaseKit" />
             <option value="$PROJECT_DIR$/BaseLib2" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/hedc_usb_com" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

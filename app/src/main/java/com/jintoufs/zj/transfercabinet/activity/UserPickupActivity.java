@@ -3,6 +3,8 @@ package com.jintoufs.zj.transfercabinet.activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -20,10 +22,18 @@ import com.basekit.base.BaseActivity;
 import com.basekit.util.StringUtils;
 import com.basekit.util.ToastUtils;
 import com.jintoufs.zj.transfercabinet.R;
+import com.jintoufs.zj.transfercabinet.config.AppConstant;
+import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
+import com.jintoufs.zj.transfercabinet.db.DBManager;
+import com.jintoufs.zj.transfercabinet.dialog.WaitDialog;
+import com.jintoufs.zj.transfercabinet.model.CabinetModel;
 import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
 import com.jintoufs.zj.transfercabinet.net.NetService;
+import com.jintoufs.zj.transfercabinet.util.SharedPreferencesHelper;
 import com.jintoufs.zj.transfercabinet.util.TimeUtil;
+import com.orhanobut.logger.Logger;
 
+import java.net.Socket;
 import java.util.Date;
 
 import butterknife.BindView;
@@ -66,6 +76,14 @@ public class UserPickupActivity extends BaseActivity {
 
     private Unbinder unbinder;
     private Context mContext;
+    private WaitDialog waitDialog;
+    private DBManager dbManager;
+
+    private CabinetInfo cabinetInfo;//当前操作的柜子
+    private String IPAddress;//交接柜IP
+    private String col, row;
+    private Socket socket;
+    private SharedPreferencesHelper sharedPreferencesHelper;
 
     @Override
     public void initView() {
@@ -73,6 +91,10 @@ public class UserPickupActivity extends BaseActivity {
         setContentView(R.layout.activity_pickup);
         unbinder = ButterKnife.bind(this);
         mContext = this;
+        dbManager = DBManager.getInstance(this);
+        sharedPreferencesHelper = new SharedPreferencesHelper(this);
+        IPAddress = (String) sharedPreferencesHelper.get("IpAddress", null);
+
         etNumber01.requestFocus();
         etNumber01.addTextChangedListener(new MyTextWatcher() {
             @Override
@@ -134,12 +156,19 @@ public class UserPickupActivity extends BaseActivity {
         });
 
         tvTime.setText("当前时间：" + TimeUtil.DateToString(new Date()));
+        waitDialog = new WaitDialog(mContext);
+        if (IPAddress == null) {
+            btnSure.setEnabled(false);
+            ToastUtils.showLongToast(mContext, "交接柜数据加载出错！");
+            return;
+        }
     }
 
     @OnClick({R.id.btn_sure, R.id.btn_back, R.id.rl_all})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btn_sure:
+                waitDialog.show(mContext, "验证中，请等待...");
                 String code01 = etNumber01.getText().toString().trim();
                 String code02 = etNumber02.getText().toString().trim();
                 String code03 = etNumber03.getText().toString().trim();
@@ -148,36 +177,54 @@ public class UserPickupActivity extends BaseActivity {
                 String code06 = etNumber06.getText().toString().trim();
                 if (TextUtils.isEmpty(code01) || TextUtils.isEmpty(code02) || TextUtils.isEmpty(code03)
                         || TextUtils.isEmpty(code04) || TextUtils.isEmpty(code05) || TextUtils.isEmpty(code06)) {
+                    waitDialog.dismiss();
                     ToastUtils.showShortToast(mContext, "验证码不全，请更正");
                     return;
                 }
                 String code = (code01 + code02 + code03 + code04 + code05 + code06).trim();
-                Call<ResponseInfo<String>> call = NetService.getApiService().validateMessageCode(code);
-                call.enqueue(new Callback<ResponseInfo<String>>() {
-                    @Override
-                    public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
-                        ResponseInfo<String> responseInfo = response.body();
-                        if (responseInfo != null) {
-                            if ("200".equals(responseInfo.getCode())) {
-                                String userId = responseInfo.getData();
-                                if (userId == null || "null".equals(userId)) {
-                                    showNoticeDialog("验证码错误，请检查验证码！");
-                                } else {
-                                    //打开当前用户的柜子。。。。。。。。。。。。。。。。
-                                    showNoticeDialog("抽屉已打开，请取走你的证件！");
-                                }
-                            } else {
-                                showNoticeDialog("请求返回错误，请检查服务器");
-                            }
-                        }
-                    }
+//                Call<ResponseInfo<String>> call = NetService.getApiService().validateMessageCode(code);
+//                call.enqueue(new Callback<ResponseInfo<String>>() {
+//                    @Override
+//                    public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
+//                        ResponseInfo<String> responseInfo = response.body();
+//                        if (responseInfo != null) {
+//                            if ("200".equals(responseInfo.getCode())) {
+//                                String paperworkId = responseInfo.getData();
+//                                //////////////
+//                            } else {
+//                                ToastUtils.showLongToast(mContext, "验证码出错，请检查！");
+//                            }
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
+//                        ToastUtils.showShortToast(mContext, t.getMessage());
+//                    }
+//                });
+                String paperworkId = "C26689952";
+                if (paperworkId == null) {
+                    waitDialog.dismiss();
+                    ToastUtils.showLongToast(mContext, "数据返回错误，请检查服务器！");
+                    return;
+                }
+                cabinetInfo = dbManager.querySingleCabinetByPaperworkId(paperworkId);
+                if (cabinetInfo == null) {
+                    waitDialog.dismiss();
+                    ToastUtils.showLongToast(mContext, "本地没有该证件的存储记录！");
+                    return;
+                }
 
-                    @Override
-                    public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
-                        ToastUtils.showShortToast(mContext, t.getMessage());
-                    }
-                });
-
+                String cabinetNumber = cabinetInfo.getCabinetNumber();
+                String[] strs = cabinetNumber.split(",");
+                if (strs.length != 3) {
+                    ToastUtils.showLongToast(mContext, "本地数据格式出错！");
+                    return;
+                }
+                row = strs[1];
+                col = strs[2];
+                waitDialog.show(mContext, "验证成功，正在打开柜子...");
+                openCabinet();//打开柜子
                 break;
             case R.id.btn_back:
                 finish();
@@ -189,7 +236,93 @@ public class UserPickupActivity extends BaseActivity {
         }
     }
 
-    private void showNoticeDialog(String info) {
+    private void openCabinet() {
+        //开柜子操作
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (socket == null)
+                        socket = new Socket(IPAddress, AppConstant.PORT);
+                    int count = 0;
+                    boolean isOpen = false;
+                    while (!isOpen && count != 5) {
+                        CabinetModel.openDrawer(socket, row, col);
+                        Thread.sleep(500);
+                        isOpen = CabinetModel.isOpen(socket, row, col);
+                        count++;
+                    }
+
+                    Message message = Message.obtain();
+                    message.what = 1;
+                    message.obj = isOpen;
+                    mHandler.sendMessage(message);
+
+                } catch (Exception e) {
+                    Logger.i(e.getMessage());
+                }
+
+
+            }
+        }).start();
+    }
+
+    private void closeCabinet() {
+        //关柜子操作
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (socket == null)
+                        socket = new Socket(IPAddress, AppConstant.PORT);
+                    int count = 0;
+                    boolean isOpen = true;
+                    while (isOpen && count != 5) {
+                        CabinetModel.closeDrawer(socket, row, col);
+                        Thread.sleep(500);
+                        isOpen = CabinetModel.isOpen(socket, row, col);
+                        count++;
+                    }
+
+                    Message message = Message.obtain();
+                    message.what = 2;
+                    message.obj = isOpen;
+                    mHandler.sendMessage(message);
+
+                } catch (Exception e) {
+                    Logger.i(e.getMessage());
+                }
+
+
+            }
+        }).start();
+    }
+
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == 1) {
+                waitDialog.dismiss();
+                boolean isOpen = (boolean) msg.obj;
+                if (isOpen) {
+                    showNoticeDialog("柜子已打开，请取出证件！", true);
+                } else {
+                    showNoticeDialog("柜子打开失败，请联系管理员！", false);
+                }
+            } else if (msg.what == 2) {
+                waitDialog.dismiss();
+                boolean isOpen = (boolean) msg.obj;
+                if (isOpen) {
+                    ToastUtils.showShortToast(mContext, "关闭柜子失败，请联系管理员！");
+                } else {
+                    ToastUtils.showShortToast(mContext, "关闭柜子成功！");
+                }
+            }
+            super.handleMessage(msg);
+        }
+    };
+
+    private void showNoticeDialog(String info, final boolean isOpen) {
         final Dialog dialog = new Dialog(mContext, R.style.TransparentDialogStyle);
         dialog.setCanceledOnTouchOutside(true);
         Window window = dialog.getWindow();
@@ -197,6 +330,13 @@ public class UserPickupActivity extends BaseActivity {
         TextView tv_back = (TextView) view.findViewById(R.id.tv_back);
         TextView tv_try_again = (TextView) view.findViewById(R.id.tv_try_again);
         TextView tv_message = (TextView) view.findViewById(R.id.tv_message);
+        if (isOpen) {
+            tv_back.setVisibility(View.GONE);
+            tv_try_again.setText("关闭柜子");
+        } else {
+            tv_back.setVisibility(View.VISIBLE);
+            tv_try_again.setText("重试");
+        }
         tv_message.setText(info);
         tv_back.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -209,6 +349,11 @@ public class UserPickupActivity extends BaseActivity {
             @Override
             public void onClick(View view) {
                 dialog.dismiss();
+                if (isOpen) {//关闭柜子
+                    closeCabinet();
+                } else {//重试，打开柜子
+                    openCabinet();//打开柜子
+                }
             }
         });
         window.setContentView(view);

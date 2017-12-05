@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
+import com.jintoufs.zj.transfercabinet.model.bean.Cabinet;
 
 import java.util.List;
 
@@ -18,10 +19,10 @@ import java.util.List;
 
 public class CabinetInfoAdapter extends RecyclerView.Adapter<CabinetInfoAdapter.CabinetHolder> {
     private Context mContext;
-    private List<CabinetInfo> cabinetInfoBeanList;
+    private List<Cabinet> cabinetInfoBeanList;
     private OnOpenDrawerClickListener onOpenDrawerClickListener;
 
-    public CabinetInfoAdapter(Context mContext, List<CabinetInfo> cabinetInfoBeanList) {
+    public CabinetInfoAdapter(Context mContext, List<Cabinet> cabinetInfoBeanList) {
         this.mContext = mContext;
         this.cabinetInfoBeanList = cabinetInfoBeanList;
     }
@@ -32,8 +33,9 @@ public class CabinetInfoAdapter extends RecyclerView.Adapter<CabinetInfoAdapter.
     }
 
     @Override
-    public void onBindViewHolder(CabinetHolder holder, final int position) {
-        CabinetInfo cabinetInfoBean = cabinetInfoBeanList.get(position);
+    public void onBindViewHolder(final CabinetHolder holder, final int position) {
+        Cabinet cabinet = cabinetInfoBeanList.get(position);
+        CabinetInfo cabinetInfoBean = cabinet.getCabinetInfo();
         //识别证件类型
         if ("0".equals(cabinetInfoBean.getType())) {
             holder.tv_type.setText("护照");
@@ -62,6 +64,11 @@ public class CabinetInfoAdapter extends RecyclerView.Adapter<CabinetInfoAdapter.
             holder.btn_open_drawer.setEnabled(false);
             holder.tv_cabinetId.setText("数据出错");
             holder.tv_drawerId.setText("数据出错");
+        }
+        if (cabinet.isOpen()){
+            holder.btn_open_drawer.setText("关闭柜子");
+        }else {
+            holder.btn_open_drawer.setText("打开柜子");
         }
         holder.btn_open_drawer.setOnClickListener(new View.OnClickListener() {
             @Override

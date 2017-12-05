@@ -17,9 +17,10 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:background="@null"
+            android:background="@android:color/transparent"
             android:maxHeight="130dp"
-            android:maxWidth="230dp" />
+            android:maxWidth="230dp"
+            android:scaleType="center"/>
 
         <TextView
             android:id="@+id/tv_context"

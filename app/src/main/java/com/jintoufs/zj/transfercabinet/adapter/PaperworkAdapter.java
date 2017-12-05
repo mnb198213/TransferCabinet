@@ -2,6 +2,9 @@ package com.jintoufs.zj.transfercabinet.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.os.Build;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,8 +49,16 @@ public class PaperworkAdapter extends RecyclerView.Adapter<PaperworkAdapter.PWHo
                 "\n证件类型：" + paperwork.getType() + "      证件号：" + paperwork.getNumber() +
                 "\n所属机构：" + paperwork.getOrgName());
         Bitmap bitmap = Base64Util.stringtoBitmap(paperwork.getImage());
+        //压缩图片
+        Matrix matrix = new Matrix();
+        matrix.setScale(0.5f, 0.5f);
+        Bitmap temp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            temp.setConfig(Bitmap.Config.ARGB_8888);
+        }
+        temp.setHasAlpha(true);
         if (bitmap != null) {
-            holder.image.setImageBitmap(bitmap);
+            holder.image.setImageBitmap(temp);
         } else {
             holder.image.setImageResource(R.mipmap.empty_img);
         }

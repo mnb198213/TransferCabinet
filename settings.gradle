@@ -1,1 +1,1 @@
-include ':app', ':BaseKit', ':BaseLib2'
+include ':app', ':BaseKit', ':BaseLib2', ':hedc_usb_com'

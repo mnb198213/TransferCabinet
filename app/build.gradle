@@ -44,10 +44,8 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-
     compile project(':BaseKit')
     compile project(':BaseLib2')
-
     //retrofit2
     // ReactiveX    //处理网络的异步请求
     //butterknife
@@ -64,11 +62,9 @@ dependencies {
     compile 'com.orhanobut:logger:2.1.1'
     testCompile 'junit:junit:4.12'
     apt 'com.jakewharton:butterknife-compiler:8.1.0'
-
     compile 'org.greenrobot:greendao:3.0.1'
-
     compile 'com.github.bumptech.glide:glide:3.7.0'
-
     apt "org.androidannotations:androidannotations:$AAVersion"
     compile "org.androidannotations:androidannotations-api:$AAVersion"
+    compile project(':hedc_usb_com')
 }

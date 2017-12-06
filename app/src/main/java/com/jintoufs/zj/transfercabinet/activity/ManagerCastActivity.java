@@ -171,7 +171,6 @@ public class ManagerCastActivity extends AppCompatActivity implements HEDCUsbCom
                 } else {
                     ToastUtils.showLongToast(mContext, "抱歉，当前没有可用的空柜！");
                 }
-                paperworkAdapter.surePaperWorkToSave();
             }
         });
         paperworkAdapter.setCloseCabinetClickListener(new PaperworkAdapter.CloseCabinetClickListener() {
@@ -270,14 +269,16 @@ public class ManagerCastActivity extends AppCompatActivity implements HEDCUsbCom
             if (msg.what == 2) {
                 boolean isOpen = (boolean) msg.obj;
                 if (!isOpen) {//正常关闭
-                    //更新本地柜子信息
+
                     int position = msg.arg1;
                     CertificateVo certificateVo = paperworkList.get(position);
+                    //更新本地柜子信息
                     cabinetInfo.setUserIdCard(certificateVo.getIdCard());
                     cabinetInfo.setPaperworkId(certificateVo.getNumber());
                     cabinetInfo.setDepartment(certificateVo.getOrgName());
                     cabinetInfo.setType(certificateVo.getType());
                     cabinetInfo.setUsername(certificateVo.getUserName());
+                    cabinetInfo.setState("1");
                     dbManager.updateCabinetInfo(cabinetInfo);
 
                     String cabinetNumber = cabinetInfo.getCabinetNumber();
@@ -292,6 +293,8 @@ public class ManagerCastActivity extends AppCompatActivity implements HEDCUsbCom
                     poVo.setLocationCode(row + col);
                     poVo.setNumber(cabinetInfo.getPaperworkId());
                     poVoList.add(poVo);
+                    //完成发证
+                    paperworkAdapter.finishSave("已发证");
                     //标识有开箱记录，需要提交记录
                     isAction = true;
                     btnFinish.setVisibility(View.VISIBLE);
@@ -305,7 +308,9 @@ public class ManagerCastActivity extends AppCompatActivity implements HEDCUsbCom
                 boolean isOpen = (boolean) msg.obj;
                 if (!isOpen) {
                     ToastUtils.showLongToast(mContext, "抱歉，当前没有可用的空柜！");
+                    return;
                 }
+                paperworkAdapter.surePaperWorkToSave();
             } else if (msg.what == 4) {
                 ToastUtils.showLongToast(mContext, "获取的证件号不正确，请重新扫描");
             }
@@ -418,6 +423,10 @@ public class ManagerCastActivity extends AppCompatActivity implements HEDCUsbCom
 
     @Override
     protected void onStop() {
+        if (unbinder != null) {
+            unbinder.unbind();
+        }
+
         if (socket != null) {
             try {
                 socket.close();
@@ -427,19 +436,11 @@ public class ManagerCastActivity extends AppCompatActivity implements HEDCUsbCom
         }
         if (threadPool != null)
             threadPool.shutdown();
-        if (isConnnection){
+
+        if (isConnnection) {
             m_engine.StopReadingSession();
         }
         super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (unbinder != null) {
-            unbinder.unbind();
-        }
-
-        super.onDestroy();
     }
 
     private String[] AsciiTab = {

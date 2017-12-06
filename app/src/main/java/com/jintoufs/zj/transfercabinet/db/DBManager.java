@@ -145,10 +145,11 @@ public class DBManager {
 
     /**
      * 根据证件ID查询到对应的柜子
+     *
      * @param paperworkId
      * @return
      */
-    public CabinetInfo querySingleCabinetByPaperworkId(String paperworkId){
+    public CabinetInfo querySingleCabinetByPaperworkId(String paperworkId) {
         QueryBuilder<CabinetInfo> queryBuilder = getReadCabinetInfoDao().queryBuilder();
         queryBuilder.where(CabinetInfoDao.Properties.PaperworkId.eq(paperworkId));
         List<CabinetInfo> cabinetInfoList = queryBuilder.list();
@@ -156,7 +157,6 @@ public class DBManager {
             return cabinetInfoList.get(0);
         else return null;
     }
-
 
 
     /**
@@ -183,6 +183,17 @@ public class DBManager {
         return cabinetInfoList;
     }
 
-
+    /**
+     * 查询待回收证件的柜子
+     * @return
+     */
+    public List<CabinetInfo> queryReceiveCabinetList() {
+        QueryBuilder<CabinetInfo> queryBuilder = getReadCabinetInfoDao().queryBuilder();
+        queryBuilder.where(CabinetInfoDao.Properties.PaperworkId.notEq("0"),
+                CabinetInfoDao.Properties.UserIdCard.notEq("0"),
+                CabinetInfoDao.Properties.State.eq("2"));
+        List<CabinetInfo> cabinetInfoList = queryBuilder.list();
+        return cabinetInfoList;
+    }
 
 }

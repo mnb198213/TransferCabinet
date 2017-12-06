@@ -4,15 +4,36 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/theme_background">
-    <TextView
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:text="交接柜信息"
-        android:textColor="@color/smart_text_color"
-        android:textSize="30sp"
-        android:background="@color/title_background"/>
+        android:layout_height="wrap_content"
+        android:background="@color/title_background">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:text="交接柜信息"
+            android:textColor="@color/smart_text_color"
+            android:textSize="30sp"
+            android:layout_centerInParent="true"/>
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="返回"
+            android:layout_marginTop="40dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/shape_btn_sure"
+            android:textSize="@dimen/btn_text_size"
+            android:textColor="@color/smart_text_color"
+            android:paddingLeft="50dp"
+            android:paddingRight="50dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="15dp"/>
+    </RelativeLayout>
+
     <TextView
         android:id="@+id/tv_info"
         android:layout_width="match_parent"

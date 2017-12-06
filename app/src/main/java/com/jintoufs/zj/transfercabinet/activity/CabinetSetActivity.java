@@ -42,6 +42,8 @@ public class CabinetSetActivity extends BaseActivity {
     TextView tvInfo;
     @BindView(R.id.btn_change)
     Button btnChange;
+    @BindView(R.id.btn_back)
+    Button btn_back;
     private Unbinder unbinder;
 
     private SharedPreferencesHelper sharedPreferencesHelper;
@@ -72,14 +74,22 @@ public class CabinetSetActivity extends BaseActivity {
                 "\n名称：" + cabinetInfoBean.getName() +
                 "\nIP:" + cabinetInfoBean.getIpAddress() +
                 "\n位置：" + cabinetInfoBean.getLocation() +
-                "\n行列数：" + cabinetInfoBean.getRow() + "," + cabinetInfoBean.getCol() +
+                "\n行列数：" + cabinetInfoBean.getRow() + "行" + cabinetInfoBean.getCol() + "列" +
                 "\n机构名称：" + cabinetInfoBean.getOrgName());
     }
 
-    @OnClick(R.id.btn_change)
-    public void onViewClicked() {
-        showInputCabinetIPDialog("交接柜IP:");
+    @OnClick({R.id.btn_back, R.id.btn_change})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.btn_back:
+                finish();
+                break;
+            case R.id.btn_change:
+                showInputCabinetIPDialog("交接柜IP:");
+                break;
+        }
     }
+
 
     private void showInputCabinetIPDialog(String info) {
         final Dialog dialog = new Dialog(this, R.style.TransparentDialogStyle);
@@ -122,7 +132,7 @@ public class CabinetSetActivity extends BaseActivity {
                                     String cabinetNumber = id + "," + i + "," + j;
 //                                    CabinetInfo(Long id, String userIdCard, String username,
 //                                            String department, String cabinetNumber, String paperworkId, String type)
-                                    CabinetInfo cabinetInfo = new CabinetInfo(null, "0", "0", "0", cabinetNumber, "0", "0");
+                                    CabinetInfo cabinetInfo = new CabinetInfo(null, "0", "0", "0", cabinetNumber, "0", "0", "0");
                                     cabinetInfoList.add(cabinetInfo);
                                 }
                             }
@@ -154,4 +164,5 @@ public class CabinetSetActivity extends BaseActivity {
         }
         super.onDestroy();
     }
+
 }

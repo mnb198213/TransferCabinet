@@ -163,7 +163,7 @@ public class CabinetMonitorActivity extends BaseActivity {
                 if ("0".equals(drawer.getDepartment())) {
                     department = "无";
                 } else {
-                    department = drawer.getName();
+                    department = drawer.getDepartment();
                 }
 
                 String userId;
@@ -251,6 +251,8 @@ public class CabinetMonitorActivity extends BaseActivity {
                             } catch (Exception e) {
                                 Logger.i("异常：" + e.getClass().getName());
                                 e.printStackTrace();
+                                waitDialog.dismiss();
+                                return;
                             }
                         }
                     });
@@ -277,6 +279,8 @@ public class CabinetMonitorActivity extends BaseActivity {
                             } catch (Exception e) {
                                 Logger.i("异常：" + e.getClass().getName());
                                 e.printStackTrace();
+                                waitDialog.dismiss();
+                                return;
                             }
                         }
                     });
@@ -382,6 +386,9 @@ public class CabinetMonitorActivity extends BaseActivity {
                         ToastUtils.showLongToast(mContext, "提示：有未正常关闭的柜子，请检查故障！");
                     }
                     break;
+                case 6:
+                    waitDialog.dismiss();
+                    ToastUtils.showLongToast(mContext, "与交接柜的连接异常，请检查故障！");
                 default:
                     super.handleMessage(msg);
             }
@@ -466,8 +473,10 @@ public class CabinetMonitorActivity extends BaseActivity {
 
                                     Thread.sleep(1000);//休眠1秒，让线程有足够时间处理逻辑
                                 } catch (Exception e) {
+                                    mHandler.sendEmptyMessage(6);
                                     Logger.i("异常：" + e.getClass().getName());
                                     e.printStackTrace();
+                                    break;
                                 }
                             }
                             //完成
@@ -516,8 +525,10 @@ public class CabinetMonitorActivity extends BaseActivity {
 
                                         Thread.sleep(1000);//休眠1秒，让线程有足够时间处理逻辑
                                     } catch (Exception e) {
+                                        mHandler.sendEmptyMessage(6);
                                         Logger.i("异常：" + e.getClass().getName());
                                         e.printStackTrace();
+                                        break;
                                     }
                                 }
                             }
@@ -529,22 +540,22 @@ public class CabinetMonitorActivity extends BaseActivity {
                     });
                 }
 //                     //上传操作所有柜子的记录
-                    Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(), "2", serialNo, null);
-                    call.enqueue(new Callback<ResponseInfo<String>>() {
-                        @Override
-                        public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
-                            if ("200".equals(response.body().getCode())) {
-                                Logger.i("提交成功");
-                            } else {
-                                Logger.i("提交失败");
-                            }
+                Call<ResponseInfo<String>> call = NetService.getApiService().tccMaintainSubmit(user.getUserId(), "2", serialNo, null);
+                call.enqueue(new Callback<ResponseInfo<String>>() {
+                    @Override
+                    public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
+                        if ("200".equals(response.body().getCode())) {
+                            Logger.i("提交成功");
+                        } else {
+                            Logger.i("提交失败");
                         }
+                    }
 
-                        @Override
-                        public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
-                            Logger.i("异常：" + t.getMessage());
-                        }
-                    });
+                    @Override
+                    public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
+                        Logger.i("异常：" + t.getMessage());
+                    }
+                });
             }
         });
         window.setContentView(view);

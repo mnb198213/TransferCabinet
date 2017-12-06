@@ -44,9 +44,24 @@ public class PaperworkAdapter extends RecyclerView.Adapter<PaperworkAdapter.PWHo
     @Override
     public void onBindViewHolder(final PWHolder holder, final int position) {
         CertificateVo paperwork = paperworkList.get(position);
-        holder.tv_context.setText("姓名：" + paperwork.getUserName() + "      性别：" + paperwork.getSex() + "      出生日期：" + paperwork.getBornDate() +
+        String sex = null;
+        if ("1".equals(paperwork.getSex())) {
+            sex = "男";
+        } else {
+            sex = "女";
+        }
+        String type = null;
+        if ("1".equals(paperwork.getType())) {
+            type = "港澳通行证";
+        } else if ("0".equals(paperwork.getType())) {
+            type = "护照";
+        } else if ("2".equals(paperwork.getType())) {
+            type = "台湾通行证";
+        }
+
+        holder.tv_context.setText("姓名：" + paperwork.getUserName() + "      性别：" + sex + "      出生日期：" + paperwork.getBornDate() +
                 "      民族：" + paperwork.getNation() + "\n身份证号：" + paperwork.getIdCard() + "      联系电话：" + paperwork.getPhone() +
-                "\n证件类型：" + paperwork.getType() + "      证件号：" + paperwork.getNumber() +
+                "\n证件类型：" + type + "      证件号：" + paperwork.getNumber() +
                 "\n所属机构：" + paperwork.getOrgName());
         Bitmap bitmap = Base64Util.stringtoBitmap(paperwork.getImage());
         //压缩图片
@@ -94,6 +109,12 @@ public class PaperworkAdapter extends RecyclerView.Adapter<PaperworkAdapter.PWHo
     public void surePaperWorkToSave() {
         tempHolder.btn_save.setVisibility(View.GONE);
         tempHolder.btn_close.setVisibility(View.VISIBLE);
+    }
+
+    public void finishSave(String info) {
+        tempHolder.btn_close.setText(info);
+        tempHolder.btn_close.setEnabled(false);
+        tempHolder.btn_re.setVisibility(View.GONE);
     }
 
     @Override

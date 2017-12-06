@@ -106,7 +106,8 @@ public class ManagerReceiveActivity extends BaseActivity {
         user = getIntent().getParcelableExtra("User");
         dbManager = DBManager.getInstance(this);
         paperworkInfoList = new ArrayList<>();
-        List<CabinetInfo> cabinetInfoList = dbManager.queryUseredCabinetList();
+        List<CabinetInfo> cabinetInfoList = dbManager.queryReceiveCabinetList();
+
         int size = cabinetInfoList.size();
         for (int i = 0; i < size; i++) {
             Cabinet cabinet = new Cabinet();
@@ -163,6 +164,7 @@ public class ManagerReceiveActivity extends BaseActivity {
         waitDialog.show(mContext, "柜子正在打开,请稍等...");
         row = strs[1];
         col = strs[2];
+        Logger.i("行：" + row + "列：" + col);
         //打开单个柜门
         threadPool.execute(new Runnable() {
             @Override
@@ -171,10 +173,11 @@ public class ManagerReceiveActivity extends BaseActivity {
                     if (socket == null) socket = new Socket(IPAddress, AppConstant.PORT);
                     int count = 0;
                     boolean isOpen = false;
-                    while (isOpen && count != 5) {
+                    while (!isOpen && count != 5) {
                         CabinetModel.openDrawer(socket, row, col);
                         Thread.sleep(500);
                         isOpen = CabinetModel.isOpen(socket, row, col);
+                        count++;
                     }
                     Message message = Message.obtain();
                     message.what = 1;
@@ -182,6 +185,7 @@ public class ManagerReceiveActivity extends BaseActivity {
                     mHandler.sendMessage(message);
                 } catch (Exception e) {
                     ToastUtils.showLongToast(mContext, "开柜异常：" + e.getMessage());
+                    return;
                 }
             }
         });
@@ -206,10 +210,11 @@ public class ManagerReceiveActivity extends BaseActivity {
                     if (socket == null) socket = new Socket(IPAddress, AppConstant.PORT);
                     int count = 0;
                     boolean isOpen = true;
-                    while (!isOpen && count != 5) {
+                    while (isOpen && count != 5) {
                         CabinetModel.closeDrawer(socket, row, col);
                         Thread.sleep(500);
                         isOpen = CabinetModel.isOpen(socket, row, col);
+                        count++;
                     }
                     Message message = Message.obtain();
                     message.what = 2;
@@ -226,10 +231,10 @@ public class ManagerReceiveActivity extends BaseActivity {
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            boolean isOpen = (boolean) msg.obj;
             switch (msg.what) {
                 case 1://开柜
-                    if (isOpen) {
+                    boolean isOpen1 = (boolean) msg.obj;
+                    if (isOpen1) {
                         isAction = true;
                         waitDialog.show(mContext, "柜子打开成功，请取出证件！");
                         mHandler.sendEmptyMessageDelayed(3, 1500);
@@ -241,7 +246,8 @@ public class ManagerReceiveActivity extends BaseActivity {
                     }
                     break;
                 case 2://关柜
-                    if (isOpen) {
+                    boolean isOpen2 = (boolean) msg.obj;
+                    if (isOpen2) {
                         waitDialog.show(mContext, "柜子关闭失败，请重试或联系管理员！");
                         mHandler.sendEmptyMessageDelayed(3, 1500);
                     } else {
@@ -263,6 +269,7 @@ public class ManagerReceiveActivity extends BaseActivity {
                         CabinetInfo cabinetInfo1 = dbManager.querySingleCabinet(cabinetNumber);
                         cabinetInfo1.setPaperworkId("0");
                         cabinetInfo1.setUserIdCard("0");
+                        cabinetInfo1.setState("0");
                         dbManager.updateCabinetInfo(cabinetInfo1);
 
                         paperworkInfoList.remove(cabinet);
@@ -273,10 +280,11 @@ public class ManagerReceiveActivity extends BaseActivity {
                     waitDialog.dismiss();
                     break;
                 case 4://全部开柜过程中...
-                    if (!isOpen) {
+                    boolean isOpen3 = (boolean) msg.obj;
+                    if (!isOpen3) {
                         isAll = false;
                     }
-                    cabinet.setOpen(isOpen);
+                    cabinet.setOpen(isOpen3);
                     cabinetInfoAdapter.notifyDataSetChanged();
                     break;
                 case 5://全部开柜结束
@@ -290,7 +298,8 @@ public class ManagerReceiveActivity extends BaseActivity {
                     isAllOpen = false;
                     break;
                 case 6://全部关柜过程中...
-                    if (!isOpen) {
+                    boolean isOpen4 = (boolean) msg.obj;
+                    if (!isOpen4) {
                         isAll = false;
                     }
                     if (row.length() == 1) {
@@ -507,6 +516,9 @@ public class ManagerReceiveActivity extends BaseActivity {
 
     @Override
     protected void onStop() {
+        if (unbinder != null) {
+            unbinder.unbind();
+        }
         if (threadPool != null)
             threadPool.shutdown();
         if (socket != null) {
@@ -517,23 +529,5 @@ public class ManagerReceiveActivity extends BaseActivity {
             }
         }
         super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (unbinder != null) {
-            unbinder.unbind();
-        }
-        if (threadPool != null) {
-            threadPool.shutdown();
-        }
-        if (socket != null) {
-            try {
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        super.onDestroy();
     }
 }

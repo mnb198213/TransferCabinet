@@ -18,6 +18,7 @@ import com.basekit.util.ToastUtils;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
 import com.jintoufs.zj.transfercabinet.db.DBManager;
+import com.jintoufs.zj.transfercabinet.dialog.WaitDialog;
 import com.jintoufs.zj.transfercabinet.model.CabinetInfoBeanModel;
 import com.jintoufs.zj.transfercabinet.model.bean.CabinetInfoBean;
 import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
@@ -59,6 +60,7 @@ public class HomeActivity extends AppCompatActivity {
     private CabinetInfoBeanModel cabinetInfoBeanModel;
     private boolean isFirst;
     private DBManager dbManager;
+    private WaitDialog waitDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +68,7 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         unbinder = ButterKnife.bind(this);
         mContext = this;
+        waitDialog = new WaitDialog(this);
         dbManager = DBManager.getInstance(this);
         tvTime.setText("当前时间：" + TimeUtil.DateToString(new Date()));
         sharedPreferencesHelper = new SharedPreferencesHelper(this);
@@ -95,11 +98,13 @@ public class HomeActivity extends AppCompatActivity {
         btn_sure.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                waitDialog.show(mContext,"正在初始化，请稍等...");
                 String CIP = et_input.getText().toString();
                 Call<ResponseInfo<CabinetInfoBean>> call = NetService.getApiService().getTransferCabinetByIp(CIP);
                 call.enqueue(new Callback<ResponseInfo<CabinetInfoBean>>() {
                     @Override
                     public void onResponse(Call<ResponseInfo<CabinetInfoBean>> call, Response<ResponseInfo<CabinetInfoBean>> response) {
+                        waitDialog.dismiss();
                         ResponseInfo<CabinetInfoBean> responseInfo = response.body();
                         Logger.i("正常反馈");
                         if (responseInfo != null && responseInfo.getData() != null) {
@@ -115,7 +120,7 @@ public class HomeActivity extends AppCompatActivity {
                                     String cabinetNumber = id + "," + i + "," + j;
 //                                    CabinetInfo(Long id, String userIdCard, String username,
 //                                            String department, String cabinetNumber, String paperworkId, String type)
-                                    CabinetInfo cabinetInfo = new CabinetInfo(null,"0", "0", "0", cabinetNumber, "0","0");
+                                    CabinetInfo cabinetInfo = new CabinetInfo(null,"0", "0", "0", cabinetNumber, "0","0","0");
                                     cabinetInfoList.add(cabinetInfo);
                                 }
                             }
@@ -130,6 +135,7 @@ public class HomeActivity extends AppCompatActivity {
 
                     @Override
                     public void onFailure(Call<ResponseInfo<CabinetInfoBean>> call, Throwable t) {
+                        waitDialog.dismiss();
                         Logger.i("失败："+t.getMessage());
                         ToastUtils.showLongToast(mContext,t.getMessage());
                     }

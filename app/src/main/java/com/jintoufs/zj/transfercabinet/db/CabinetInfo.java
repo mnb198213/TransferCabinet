@@ -24,10 +24,14 @@ public class CabinetInfo {
     private String paperworkId;//一个柜子里面证件的证件号
     @Property(nameInDb = "TYPE")//0 护照 ；1 港澳通行证 ；2 台湾通行证
     private String type;//证件类型
+    @Property(nameInDb = "STATE")//1 待申领人领取   2 待库管员回收  0 其他
+    private String state;//证件状态
 
-    @Generated(hash = 24325864)
+
+    @Generated(hash = 1467445998)
     public CabinetInfo(Long id, String userIdCard, String username,
-            String department, String cabinetNumber, String paperworkId, String type) {
+            String department, String cabinetNumber, String paperworkId,
+            String type, String state) {
         this.id = id;
         this.userIdCard = userIdCard;
         this.username = username;
@@ -35,11 +39,13 @@ public class CabinetInfo {
         this.cabinetNumber = cabinetNumber;
         this.paperworkId = paperworkId;
         this.type = type;
+        this.state = state;
     }
 
     @Generated(hash = 1973192954)
     public CabinetInfo() {
     }
+
 
     public String getUserIdCard() {
         return userIdCard;
@@ -96,5 +102,13 @@ public class CabinetInfo {
 
     public void setDepartment(String department) {
         this.department = department;
+    }
+
+    public String getState() {
+        return this.state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
     }
 }

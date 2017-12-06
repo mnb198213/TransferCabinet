@@ -147,8 +147,8 @@ public class UserReturnActivity extends BaseActivity implements HEDCUsbCom.OnCon
                                         break;
                                     }
                                     Thread.sleep(1000);
-
                                 } catch (Exception e) {
+                                    waitDialog.dismiss();
                                     Logger.i("开空柜子 " + row + "|" + col + " 异常：" + e.getMessage());
                                 }
                             }
@@ -159,9 +159,9 @@ public class UserReturnActivity extends BaseActivity implements HEDCUsbCom.OnCon
                         }
                     });
                 } else {
+                    waitDialog.dismiss();
                     ToastUtils.showLongToast(mContext, "抱歉，当前没有可用的空柜！");
                 }
-                paperworkAdapter.surePaperWorkToSave();
             }
         });
         paperworkAdapter.setReEnterClickListener(new PaperworkAdapter.ReEnterClickListener() {
@@ -235,6 +235,7 @@ public class UserReturnActivity extends BaseActivity implements HEDCUsbCom.OnCon
                     cabinetInfo.setDepartment(certificateVo.getOrgName());
                     cabinetInfo.setType(certificateVo.getType());
                     cabinetInfo.setUsername(certificateVo.getUserName());
+                    cabinetInfo.setState("2");
                     dbManager.updateCabinetInfo(cabinetInfo);
 
                     String cabinetNumber = cabinetInfo.getCabinetNumber();
@@ -249,6 +250,8 @@ public class UserReturnActivity extends BaseActivity implements HEDCUsbCom.OnCon
                     poVo.setLocationCode(row + col);
                     poVo.setNumber(cabinetInfo.getPaperworkId());
                     poVoList.add(poVo);
+                    //消除显示
+                    paperworkAdapter.finishSave("已存证");
                     //标识有开箱记录，需要提交记录
                     isAction = true;
                     btnFinish.setVisibility(View.VISIBLE);
@@ -260,10 +263,12 @@ public class UserReturnActivity extends BaseActivity implements HEDCUsbCom.OnCon
                 boolean isOpen = (boolean) msg.obj;
                 if (!isOpen) {
                     ToastUtils.showLongToast(mContext, "抱歉，当前没有可用的空柜！");
+                    return;
                 }
+                paperworkAdapter.surePaperWorkToSave();
             } else if (msg.what == 4) {
                 loadPaperworkInfo(paperworkId);
-            }else if (msg.what == 5){
+            } else if (msg.what == 5) {
                 ToastUtils.showLongToast(mContext, "获取的证件号不正确，请重新扫描");
             }
         }
@@ -392,41 +397,6 @@ public class UserReturnActivity extends BaseActivity implements HEDCUsbCom.OnCon
         dialog.show();
     }
 
-    private String[] AsciiTab = {
-            "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF", "VT",
-            "FF", "CR", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB",
-            "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US", "SP", "DEL",
-    };
-    private boolean isConnnection = false;
-
-    public String ConvertToString(byte[] data, int length) {
-        String s = "";
-        String s_final = "";
-        for (int i = 0; i < length; i++) {
-            if ((data[i] >= 0) && (data[i] < 0x20)) {
-                s = String.format("<%s>", AsciiTab[data[i]]);
-            } else if (data[i] >= 0x7F) {
-                s = String.format("<0x%02X>", data[i]);
-            } else {
-                s = String.format("%c", data[i] & 0xFF);
-            }
-            s_final += s;
-        }
-
-        return s_final;
-    }
-
-    @Override
-    public void OnBarcodeData(byte[] bytes, int i) {
-        String result = ConvertToString(bytes, i);
-        if (result != null && result.length() > 9) {
-            paperworkId = result.substring(0, 9);
-            mHandler.sendEmptyMessage(4);
-        } else {
-            mHandler.sendEmptyMessage(5);
-        }
-    }
-
     private void loadPaperworkInfo(String paperworkId) {
         waitDialog.show(mContext, "正在查询证件，请等待...");
         Call<ResponseInfo<CertificateVo>> call = NetService.getApiService().getCertificateByNumber(paperworkId);
@@ -462,9 +432,49 @@ public class UserReturnActivity extends BaseActivity implements HEDCUsbCom.OnCon
         });
     }
 
+
+    private String[] AsciiTab = {
+            "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF", "VT",
+            "FF", "CR", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB",
+            "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US", "SP", "DEL",
+    };
+    private boolean isConnnection = false;
+
+    public String ConvertToString(byte[] data, int length) {
+        String s = "";
+        String s_final = "";
+        for (int i = 0; i < length; i++) {
+            if ((data[i] >= 0) && (data[i] < 0x20)) {
+                s = String.format("<%s>", AsciiTab[data[i]]);
+            } else if (data[i] >= 0x7F) {
+                s = String.format("<0x%02X>", data[i]);
+            } else {
+                s = String.format("%c", data[i] & 0xFF);
+            }
+            s_final += s;
+        }
+
+        return s_final;
+    }
+
+    @Override
+    public void OnBarcodeData(byte[] bytes, int i) {
+        String result = ConvertToString(bytes, i);
+        if (result != null && result.length() > 9) {
+            paperworkId = result.substring(0, 9);
+            mHandler.sendEmptyMessage(4);
+        } else {
+            mHandler.sendEmptyMessage(5);
+        }
+    }
+
     @Override
     public void OnConnectionStateEvent(HEDCUsbCom.ConnectionState connectionState) {
-
+        if (connectionState == HEDCUsbCom.ConnectionState.Connected) {
+            isConnnection = true;
+        } else {
+            isConnnection = false;
+        }
     }
 
     @Override
@@ -496,6 +506,9 @@ public class UserReturnActivity extends BaseActivity implements HEDCUsbCom.OnCon
 
     @Override
     protected void onStop() {
+        if (unbinder != null) {
+            unbinder.unbind();
+        }
         if (threadPool != null)
             threadPool.shutdown();
         if (socket != null) {
@@ -508,11 +521,4 @@ public class UserReturnActivity extends BaseActivity implements HEDCUsbCom.OnCon
         super.onStop();
     }
 
-    @Override
-    protected void onDestroy() {
-        if (unbinder != null) {
-            unbinder.unbind();
-        }
-        super.onDestroy();
-    }
 }

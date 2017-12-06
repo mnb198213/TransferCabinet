@@ -29,6 +29,7 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
         public final static Property CabinetNumber = new Property(4, String.class, "cabinetNumber", false, "CABINETNUMBER");
         public final static Property PaperworkId = new Property(5, String.class, "paperworkId", false, "PAPERWORKID");
         public final static Property Type = new Property(6, String.class, "type", false, "TYPE");
+        public final static Property State = new Property(7, String.class, "state", false, "STATE");
     };
 
 
@@ -50,7 +51,8 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
                 "\"DEPARTMENT\" TEXT," + // 3: department
                 "\"CABINETNUMBER\" TEXT," + // 4: cabinetNumber
                 "\"PAPERWORKID\" TEXT," + // 5: paperworkId
-                "\"TYPE\" TEXT);"); // 6: type
+                "\"TYPE\" TEXT," + // 6: type
+                "\"STATE\" TEXT);"); // 7: state
     }
 
     /** Drops the underlying database table. */
@@ -97,6 +99,11 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
         if (type != null) {
             stmt.bindString(7, type);
         }
+ 
+        String state = entity.getState();
+        if (state != null) {
+            stmt.bindString(8, state);
+        }
     }
 
     @Override
@@ -137,6 +144,11 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
         if (type != null) {
             stmt.bindString(7, type);
         }
+ 
+        String state = entity.getState();
+        if (state != null) {
+            stmt.bindString(8, state);
+        }
     }
 
     @Override
@@ -153,7 +165,8 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
             cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // department
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // cabinetNumber
             cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5), // paperworkId
-            cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6) // type
+            cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6), // type
+            cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7) // state
         );
         return entity;
     }
@@ -167,6 +180,7 @@ public class CabinetInfoDao extends AbstractDao<CabinetInfo, Long> {
         entity.setCabinetNumber(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
         entity.setPaperworkId(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
         entity.setType(cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6));
+        entity.setState(cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7));
      }
     
     @Override

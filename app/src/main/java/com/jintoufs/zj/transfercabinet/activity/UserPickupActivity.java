@@ -21,12 +21,14 @@ import android.widget.TextView;
 import com.basekit.base.BaseActivity;
 import com.basekit.util.StringUtils;
 import com.basekit.util.ToastUtils;
+import com.baselib.http.util.GsonHelper;
 import com.jintoufs.zj.transfercabinet.R;
 import com.jintoufs.zj.transfercabinet.config.AppConstant;
 import com.jintoufs.zj.transfercabinet.db.CabinetInfo;
 import com.jintoufs.zj.transfercabinet.db.DBManager;
 import com.jintoufs.zj.transfercabinet.dialog.WaitDialog;
 import com.jintoufs.zj.transfercabinet.model.CabinetModel;
+import com.jintoufs.zj.transfercabinet.model.bean.PoVo;
 import com.jintoufs.zj.transfercabinet.model.bean.ResponseInfo;
 import com.jintoufs.zj.transfercabinet.net.NetService;
 import com.jintoufs.zj.transfercabinet.util.SharedPreferencesHelper;
@@ -34,7 +36,9 @@ import com.jintoufs.zj.transfercabinet.util.TimeUtil;
 import com.orhanobut.logger.Logger;
 
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -202,7 +206,7 @@ public class UserPickupActivity extends BaseActivity {
 //                        ToastUtils.showShortToast(mContext, t.getMessage());
 //                    }
 //                });
-                String paperworkId = "C26689952";
+                String paperworkId = "E23638968";
                 if (paperworkId == null) {
                     waitDialog.dismiss();
                     ToastUtils.showLongToast(mContext, "数据返回错误，请检查服务器！");
@@ -315,6 +319,53 @@ public class UserPickupActivity extends BaseActivity {
                 if (isOpen) {
                     ToastUtils.showShortToast(mContext, "关闭柜子失败，请联系管理员！");
                 } else {
+                    String cabinetNumber = cabinetInfo.getCabinetNumber();
+                    String[] strs = cabinetNumber.split(",");
+                    if (strs.length != 3) {
+                        ToastUtils.showShortToast(mContext, "本地数据错误");
+                        return;
+                    }
+                    String serialNo = strs[0];
+                    String row = strs[1];
+                    String col = strs[2];
+
+                    if (row.length() == 1) {
+                        row = "0" + row;
+                    }
+                    if (col.length() == 1) {
+                        col = "0" + col;
+                    }
+
+                    //提交取件记录
+                    PoVo poVo = new PoVo();
+                    poVo.setCabinetSerialNo(serialNo);
+                    poVo.setNumber(cabinetInfo.getPaperworkId());
+                    poVo.setLocationCode(row + col);
+                    List<PoVo> poVoList = new ArrayList<>();
+                    poVoList.add(poVo);
+                    String strPovolist = GsonHelper.objectToJSONString(poVoList);
+                    Call<ResponseInfo<String>> call = NetService.getApiService().tccOutSubmit(strPovolist, null);
+                    call.enqueue(new retrofit2.Callback<ResponseInfo<String>>() {
+                        @Override
+                        public void onResponse(Call<ResponseInfo<String>> call, Response<ResponseInfo<String>> response) {
+                            String code = response.body().getCode();
+                            if ("200".equals(code)) {
+                                Logger.i("申领人取件记录提交成功！");
+                            } else {
+                                Logger.i("申领人取件记录提交失败！");
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<ResponseInfo<String>> call, Throwable t) {
+                            Logger.i("申领人取件记录提交异常：" + t.getMessage());
+                        }
+                    });
+                    //更新本地数据
+                    cabinetInfo.setState("0");
+                    cabinetInfo.setPaperworkId("0");
+                    cabinetInfo.setUserIdCard("0");
+                    dbManager.updateCabinetInfo(cabinetInfo);
                     ToastUtils.showShortToast(mContext, "关闭柜子成功！");
                 }
             }

@@ -36,7 +36,6 @@ public class MyApplication extends Application {
                 .tag("zoujiang")   // (Optional) Global tag for every log. Default PRETTY_LOGGER
                 .build();
         Logger.addLogAdapter(new AndroidLogAdapter(formatStrategy));
-
     }
 
     public SerialPort getSerialPort() throws SecurityException, IOException, InvalidParameterException {
